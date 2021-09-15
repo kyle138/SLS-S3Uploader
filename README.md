@@ -1,4 +1,5 @@
-# SLS - S3 Uploader
+# SLS-S3Uploader
+Serverless stack allowing anonymous uploads to S3 bucket.
 
 This service consists of:
 Lambdas:
