@@ -40,6 +40,15 @@ provider:
 #  environment:
 #    variable1: value1
 
+# layers
+layers:
+  commonModules:
+    path: layers/CommonModules
+    compatibleRuntimes:
+      - nodejs14.x
+    name: ${self:provider.stage}-s3uploader-commonModules
+    description: "s3client s3presigner"
+
 # you can add packaging information here
 #package:
 #  patterns:
