@@ -43,7 +43,6 @@ module.exports.handler = async (event, context, callback) => {
   console.log("putParams:"+JSON.stringify(putParams,null,2)); // DEBUG:
 
   try {
-    const command = new PutObjectCommand(putParams);
     const signedUrl = await getSignedUrl(
       s3Client,
       new PutObjectCommand(putParams),
