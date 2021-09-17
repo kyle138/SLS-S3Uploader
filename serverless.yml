@@ -52,7 +52,7 @@ layers:
     compatibleRuntimes:
       - nodejs14.x
     name: ${self:provider.stage}-s3uploader-commonModules
-    description: "s3client s3presigner"
+    description: "s3client s3presigner create-response-object"
 
 functions:
   s3uploaderpresigner:
@@ -62,9 +62,7 @@ functions:
     layers:
       - {Ref: CommonModulesLambdaLayer}
     events:
-      - httpApi:
-          path: /post/getupu
-          method: POST
+      - httpApi: 'POST /post/getupu'
 #      - s3: ${env:BUCKET}
 
 # you can add CloudFormation resource templates here
