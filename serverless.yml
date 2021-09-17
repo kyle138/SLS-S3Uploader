@@ -1,7 +1,7 @@
 service: s3uploaderpresigner
 # app and org for use with dashboard.serverless.com
 app: s3uploader
-org: kyle138
+#org: kyle138
 
 frameworkVersion: '2'
 package:
@@ -14,7 +14,7 @@ package:
 
 custom:
   stage: ${opt:stage, "dev1"}
-  s3config: ${file(.config/config.json):${self:custom.stage}}
+  s3config: ${file(./config/config.json):${self:custom.stage}}
 
 provider:
   name: aws
@@ -34,7 +34,7 @@ provider:
       Action:
         - "s3:ListBucket"
         - "s3:GetBucketLocation"
-      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", ${self:custom.s3config.bucket} ] ]  }
+      Resource: arn:aws:s3:::${self:custom.s3config.bucket}
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:PutObject"
@@ -58,7 +58,7 @@ functions:
   s3uploaderpresigner:
     handler: lambdas/s3uploaderpresigner.handler
     description: "triggered by APIG, returns presigned URLs for anonymous upload to S3 bucket."
-    timeout: 30
+    timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
     events:
