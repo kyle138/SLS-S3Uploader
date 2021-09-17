@@ -1,0 +1,8 @@
+{
+  "dev1": {
+    "bucket": "dev-upload.yourdomain.com"
+  },
+  "v1": {
+    "bucket": "upload.yourdomain.com"
+  }
+}
