@@ -13,6 +13,19 @@ const putParams = {
 };
 
 module.exports.handler = async (event) => {
+  console.log("Received event: " + JSON.stringify(event, null, 2)); // DEBUG:
+
+  // The request is contained in event.body as a stringified JSON, so parse it.
+  const request = JSON.parse(event.body);
+  console.log("request: ", JSON.stringify(subObj, null, 2)); // DEBUG: Yeah I just stringified something I just parsed
+
+  // Check if STAGE has been set as an environment variable. (REQUIRED)
+  if (!process.env.S3BUCKET) {
+    console.log("process.env.S3BUCKET missing"); // DEBUG:
+    await handleError("if(process.env.S3BUCKET)", "Missing STAGE", context);
+    return callback(null, await genResObj400("Missing process.env.S3BUCKET"));
+  }
+
   return {
     statusCode: 200,
     body: JSON.stringify(
