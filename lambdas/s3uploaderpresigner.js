@@ -1,6 +1,18 @@
 'use strict';
 
-module.exports.hello = async (event) => {
+console.log('Loading function');
+
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+const s3Client = new S3Client({ region: "us-east-1" });
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+const putParams = {
+  Bucket: "BUCKETHOLDER",
+  Key: "KEYHOLDER",
+  Body: "BODYHOLDER"
+};
+
+module.exports.handler = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify(

@@ -1,14 +1,20 @@
 service: s3uploaderpresigner
 # app and org for use with dashboard.serverless.com
-app: s3uploader 
+app: s3uploader
 org: kyle138
 
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
 frameworkVersion: '2'
+package:
+  patterns:
+    - '!README.md'
+    - '!LICENSE'
+    - '!config/config_example.json'
+#    - include-me.js
+#    - include-me-dir/**
 
 custom:
   stage: ${opt:stage, "dev1"}
+  s3config: ${file(.config/config.json):${self:custom.stage}}
 
 provider:
   name: aws
@@ -18,14 +24,17 @@ provider:
   timeout: 180
   region: us-east-1
   stage: ${self:custom.stage}
-
-
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+  httpApi:
+    cors: true
+  environment:
+    S3BUCKET: ${self:custom.s3config.bucket}
+# IAM policies
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+        - "s3:GetBucketLocation"
+      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", ${self:custom.s3config.bucket} ] ]  }
 #    - Effect: "Allow"
 #      Action:
 #        - "s3:PutObject"
@@ -36,10 +45,6 @@ provider:
 #            - "Ref" : "ServerlessDeploymentBucket"
 #            - "/*"
 
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
 # layers
 layers:
   commonModules:
@@ -49,56 +54,18 @@ layers:
     name: ${self:provider.stage}-s3uploader-commonModules
     description: "s3client s3presigner"
 
-# you can add packaging information here
-#package:
-#  patterns:
-#    - '!exclude-me.js'
-#    - '!exclude-me-dir/**'
-#    - include-me.js
-#    - include-me-dir/**
-
 functions:
-  hello:
-    handler: handler.hello
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - httpApi:
-#          path: /users/create
-#          method: get
-#      - websocket: $connect
+  s3uploaderpresigner:
+    handler: lambdas/s3uploaderpresigner.handler
+    description: "triggered by APIG, returns presigned URLs for anonymous upload to S3 bucket."
+    timeout: 30
+    layers:
+      - {Ref: CommonModulesLambdaLayer}
+    events:
+      - httpApi:
+          path: /post/getupu
+          method: POST
 #      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
-#      - alb:
-#          listenerArn: arn:aws:elasticloadbalancing:us-east-1:XXXXXX:listener/app/my-load-balancer/50dc6c495c0c9188/
-#          priority: 1
-#          conditions:
-#            host: example.com
-#            path: /hello
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
 
 # you can add CloudFormation resource templates here
 #resources:
