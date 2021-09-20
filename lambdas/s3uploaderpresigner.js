@@ -2,15 +2,22 @@
 
 console.log('Loading function');
 
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-const s3Client = new S3Client({ region: "us-east-1" });
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const AWS = require('aws-sdk');
+const cuid = require('cuid');
 const createResponseObject = require('create-response-object');
+
+const S3 = new AWS.S3({
+  apiVersion: '2006-03-01',
+  signatureVersion: 'v4',
+  sessionToken: `session-${cuid()}`
+});
 
 const putParams = {
   Bucket: "BUCKETHOLDER",
   Key: "KEYHOLDER",
-  Body: "BODYHOLDER"
+  Body: "BODYHOLDER",
+  ContentType: 'application/json',
+  Expires: 3600
 };
 
 module.exports.handler = async (event, context, callback) => {
@@ -29,7 +36,7 @@ module.exports.handler = async (event, context, callback) => {
 
   // Check for required fields in postObj
   if(
-    typeof postObj.email !== 'string' |
+    typeof postObj.email !== 'string' | // **** Need to validate emails
     typeof postObj.file !== 'string'
   ) {
     console.log("One of the postObj is missing: "+JSON.stringify(postObj,null,2));  // DEBUG:
@@ -38,16 +45,16 @@ module.exports.handler = async (event, context, callback) => {
 
   // Now that the validation checks are out of the way...
   putParams.Bucket = process.env.S3BUCKET;
-  putParams.Key = `ul/${postObj.email}/${postObj.file}`;
+  putParams.Key = `ul/${postObj.email}/${postObj.file}`;  // **** Need to sanitize email (hash?)
 
   console.log("putParams:"+JSON.stringify(putParams,null,2)); // DEBUG:
 
   try {
-    const signedUrl = await getSignedUrl(
-      s3Client,
-      new PutObjectCommand(putParams),
-      { expiresIn: 3600,}
+    const signedUrl = await S3.getSignedUrlPromise(
+      'putObject',
+      putParams
     );
+
     console.log(`signedUrl: ${signedUrl}`); // DEBUG:
     return signedUrl;
   } catch (err) {
