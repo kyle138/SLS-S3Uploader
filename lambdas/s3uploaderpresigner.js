@@ -15,7 +15,6 @@ const S3 = new AWS.S3({
 const putParams = {
   Bucket: "BUCKETHOLDER",
   Key: "KEYHOLDER",
-  Body: "BODYHOLDER",
   ContentType: 'application/json',
   Expires: 3600
 };

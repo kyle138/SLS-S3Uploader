@@ -34,6 +34,7 @@ provider:
       Action:
         - "s3:ListBucket"
         - "s3:GetBucketLocation"
+        - "s3:PutObject"
       Resource: arn:aws:s3:::${self:custom.s3config.bucket}
 #    - Effect: "Allow"
 #      Action:
