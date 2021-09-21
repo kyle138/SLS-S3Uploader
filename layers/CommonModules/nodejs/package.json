@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "create-response-object": "^1.1.0",
-    "cuid": "^2.1.8"
+    "cuid": "^2.1.8",
+    "s3-filename": "^1.0.0"
   }
 }

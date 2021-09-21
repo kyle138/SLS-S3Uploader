@@ -4,6 +4,7 @@ console.log('Loading function');
 
 const AWS = require('aws-sdk');
 const cuid = require('cuid');
+const s3Filename = require('s3-filename');
 const createResponseObject = require('create-response-object');
 
 // Instantialize S3
@@ -36,11 +37,17 @@ function validateEmail(email) {
   }); // End Promise
 } // End validateEmail
 
-// validateKeyname
+// createKeyname
 // checks if filename includes any invalid characters for S3 object names, returns sanitized key
-function validateKeyname(file) {
+function createKeyname(file) {
   return new Promise((resolve, reject) = {
-    // This would be a good place for s3-filename     ***************************
+    // Sanitize key name
+    file = s3Filename(file);
+    console.log(`s3Filename(file): ${file}`); // DEBUG:
+    // Trim all leading .s
+    file = file.replace(/^\.+/g,"");
+    console.log(`trimmed leading ..: ${file}`); // DEBUG:
+    // ************** NEXT BUILD PATH /TIMESTAMP/EMAIL/FILENAME ****************
   }); // End Promise
 } // End validateKeyname
 
