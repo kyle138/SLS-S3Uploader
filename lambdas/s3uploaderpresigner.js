@@ -22,32 +22,54 @@ const putParams = {
   Expires: 3600
 };
 
+// validateFile()
+// Checks if file is a string of some length
+// @param {string} file - The name of the file to upload
+function validateFile(file) {
+  return new Promise((resolve, reject) => {
+    if(
+      typeof file !== 'string' ||
+      file.length < 1
+    ) {
+      console.error(`validateFile(): ${file}`); // DEBUG:
+      return reject(new Error('File name invalid'));
+    } else {
+      return resolve();
+    }
+  }); // End Promise
+} // End validateFile
+
 // validateEmail()
-// checks if email contains an @ and at least 1 .
+// Checks if email contains an @ and at least one .
+// @param {string} email - The email address of the uploader
 function validateEmail(email) {
   return new Promise((resolve, reject) => {
     if(typeof email !== 'string' || email.length < 1) {
-      console.log(`validateEmail: Email is a required field. ${email}`);  // DEBUG:
+      console.error(`validateEmail: Email is a required field. ${email}`);  // DEBUG:
       return reject(new Error('Email is a required field.'));
     }
     if(!/^.+@.+\..+$/g.test(email)) {
-      console.log(`validateEmail: Email must contain @ and . ${email}`);  // DEBUG:
+      console.error(`validateEmail: Email must contain @ and . with some other stuff: ${email}`);  // DEBUG:
       return reject(new Error('Invalid email format.'));
     }
+    return resolve();
   }); // End Promise
 } // End validateEmail
 
 // createKeyname
-// checks if filename includes any invalid characters for S3 object names, returns sanitized key
-function createKeyname(file) {
-  return new Promise((resolve, reject) = {
-    // Sanitize key name
-    file = s3Filename(file);
-    console.log(`s3Filename(file): ${file}`); // DEBUG:
-    // Trim all leading .s
-    file = file.replace(/^\.+/g,"");
-    console.log(`trimmed leading ..: ${file}`); // DEBUG:
-    // ************** NEXT BUILD PATH /TIMESTAMP/EMAIL/FILENAME ****************
+// Checks if filename includes any invalid characters for S3 object names and sanitize
+// Prepend ul/email/timestamp- to filename to create key
+// @param {string} file - The filename to be uploaded
+// @param {string} email - The email address of the uploader
+function createKeyname(file, email) {
+  return new Promise((resolve, reject) => {
+    console.log(`createKeyname() params:\n file: ${file}\n email:${email}`);  // DEBUG:
+    if(!file.length || !email.length) {
+      return reject(new Error('createKeyname(): missing parameters.'));
+    } else {
+      // Prepend ul/email/timestamp/, sanitize file name, trim all leading .s, and return full key
+      return resolve(`ul/${email}/${Date.now()}-${s3Filename(file).replace(/^\.+/g,"")}`);
+    }
   }); // End Promise
 } // End validateKeyname
 
@@ -67,31 +89,24 @@ module.exports.handler = async (event, context) => {
   }
 
   // Check for required fields in postObj
-  if(
-    typeof postObj.email !== 'string' | // **** Need to validate emails
-    typeof postObj.file !== 'string'
-  ) {
-    console.log("One of the postObj is missing: "+JSON.stringify(postObj,null,2));  // DEBUG:
-    return await createResponseObject("400","Missing required field");
-  } // End if postObj
-
-  // Now that the validation checks are out of the way...
-  putParams.Bucket = process.env.S3BUCKET;
-  putParams.Key = `ul/${postObj.email}/${postObj.file}`;  // **** Need to sanitize email (hash?)
-
-  console.log("putParams:"+JSON.stringify(putParams,null,2)); // DEBUG:
-
-  try {
-    const signedUrl = await S3.getSignedUrlPromise(
-      'getObject',
+  return await Promise.all([
+    validateEmail(postObj.email),
+    validateFile(postObj.file)
+  ])  // posted values validated...
+  .then(async () => {
+    putParams.Bucket = process.env.S3BUCKET;
+    putParams.Key = await createKeyname( postObj.file, postObj.email );
+    console.log("putParams:"+JSON.stringify(putParams,null,2)); // DEBUG:
+  })  // putParams are set...
+  .then(async () => {
+    return await S3.getSignedUrlPromise(
+      'putObject',
       putParams
     );
-
-    console.log(`signedUrl: ${signedUrl}`); // DEBUG:
-    return signedUrl;
-  } catch (err) {
-    console.log("Error creating presigned URL", err); // DEBUG:
-    return await createResponseObject("400","Error creating presigned URL.");
-  } // End try..catch
+  })  // Signed URL returned...
+  .catch(async (err) => {
+    console.error('Error caught: ',err);  // DEBUG:
+    return await createResponseObject("400", err.toString());
+  }); // <<Grinding Noises>>
 
 };  // End exports.handler
