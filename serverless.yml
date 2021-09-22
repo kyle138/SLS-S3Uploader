@@ -58,8 +58,8 @@ layers:
     description: "s3client s3presigner create-response-object"
 
 functions:
-  s3uploaderpresigner:
-    handler: lambdas/s3uploaderpresigner.handler
+  presigner:
+    handler: lambdas/presigner.handler
     description: "triggered by APIG, returns presigned URLs for anonymous upload to S3 bucket."
     timeout: 28
     layers:
