@@ -1,10 +1,9 @@
 'use strict';
 
-console.log('Loading function');
-
 const AWS = require('aws-sdk');
 const cuid = require('cuid');
 const s3Filename = require('s3-filename');
+const legit = require('legit');
 const createResponseObject = require('create-response-object');
 
 // Instantialize S3
@@ -26,33 +25,43 @@ const putParams = {
 // Checks if file is a string of some length
 // @param {string} file - The name of the file to upload
 function validateFile(file) {
-  return new Promise((resolve, reject) => {
-    if(
-      typeof file !== 'string' ||
-      file.length < 1
-    ) {
+  return new Promise((res, rej) => {
+    if( typeof file !== 'string' || file.length < 1 ) {
       console.error(`validateFile(): ${file}`); // DEBUG:
-      return reject(new Error('File name invalid'));
+      return rej(new Error('File name invalid'));
     } else {
-      return resolve();
+      return res();
     }
   }); // End Promise
 } // End validateFile
 
 // validateEmail()
-// Checks if email contains an @ and at least one .
+// Check if provided email address is valid
 // @param {string} email - The email address of the uploader
 function validateEmail(email) {
-  return new Promise((resolve, reject) => {
+  return new Promise((res, rej) => {
     if(typeof email !== 'string' || email.length < 1) {
       console.error(`validateEmail: Email is a required field. ${email}`);  // DEBUG:
-      return reject(new Error('Email is a required field.'));
+      return rej(new Error('Email is a required field.'));
     }
+    // Checks if email contains an @ and some stuff followed by at least one .
     if(!/^.+@.+\..+$/g.test(email)) {
       console.error(`validateEmail: Email must contain @ and . with some other stuff: ${email}`);  // DEBUG:
-      return reject(new Error('Invalid email format.'));
+      return rej(new Error('Invalid email format.'));
     }
-    return resolve();
+    // Legit checks if the provided email address has valid MX records.
+    legit(email)
+    .then(result => {
+      if(result.isValid) {
+        return res();
+      } else {
+        return rej(new Error('Invalid email domain.'));
+      }
+    })
+    .catch(err => {
+      console.error(`validateEmail: Email is not legit. ${email}`+err); // DEBUG:
+      return rej(new Error('Email domain validation error.'));
+    });
   }); // End Promise
 } // End validateEmail
 
@@ -62,13 +71,13 @@ function validateEmail(email) {
 // @param {string} file - The filename to be uploaded
 // @param {string} email - The email address of the uploader
 function createKeyname(file, email) {
-  return new Promise((resolve, reject) => {
+  return new Promise((res, rej) => {
     console.log(`createKeyname() params:\n file: ${file}\n email:${email}`);  // DEBUG:
     if(!file.length || !email.length) {
-      return reject(new Error('createKeyname(): missing parameters.'));
+      return rej(new Error('createKeyname(): missing parameters.'));
     } else {
       // Prepend ul/email/timestamp/, sanitize file name, trim all leading .s, and return full key
-      return resolve(`ul/${email}/${Date.now()}-${s3Filename(file).replace(/^\.+/g,"")}`);
+      return res(`ul/${email}/${Date.now()}-${s3Filename(file).replace(/^\.+/g,"")}`);
     }
   }); // End Promise
 } // End validateKeyname
