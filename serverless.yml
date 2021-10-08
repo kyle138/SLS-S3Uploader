@@ -37,16 +37,10 @@ provider:
         - "s3:GetBucketLocation"
         - "s3:PutObject"
         - "s3:GetObject"
+        - "s3:AbortMultipartUpload"
+        - "s3:ListBucketMultipartUploads"
+        - "s3:ListMultipartUploadParts"
       Resource: arn:aws:s3:::${self:custom.s3config.bucket}*
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
 
 # layers
 layers:
@@ -58,6 +52,14 @@ layers:
     description: "s3client s3presigner create-response-object"
 
 functions:
+  initiator:
+    handler: lambdas/initiator.handler
+    description: "triggered by APIG, initiates anonymous S3 multipart upload, returns UploadId and Key."
+    timeout: 28
+    layers:
+      - {Ref: CommonModulesLambdaLayer}
+    events:
+      - httpApi: 'POST /post/getupid'
   presigner:
     handler: lambdas/presigner.handler
     description: "triggered by APIG, returns presigned URLs for anonymous upload to S3 bucket."
