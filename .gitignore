@@ -105,5 +105,5 @@ dist
 
 # Config files
 config/config.json
-sample_post.json
+sample_post*.json
 test*
