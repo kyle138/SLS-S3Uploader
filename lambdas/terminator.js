@@ -20,7 +20,7 @@ const termParams = {
 // Checks if provided data is a string of some length
 // @param data - The data posted in the request
 function validateProvided(data) {
-  return new Promise((res, rej) => {
+  return new Promise(async (res, rej) => {
     switch (typeof data) {
       case 'string':
         if(data.length < 1) {
@@ -59,10 +59,10 @@ function validateProvided(data) {
 function validatePart(part) {
   return new Promise((res, rej) => {
     if(
-      part.hasOwnProperty(ETag)
+      part.hasOwnProperty('ETag')
       && typeof part.ETag === 'string'
       && part.ETag.length > 0
-      && part.hasOwnProperty(PartNumber)
+      && part.hasOwnProperty('PartNumber')
       && typeof part.PartNumber === 'number'
       && part.PartNumber > 0
       && Number.isInteger(part.PartNumber)
