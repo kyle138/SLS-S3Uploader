@@ -11,11 +11,11 @@ const S3 = new AWS.S3({
 
 // Is 'Instantialize' a real word?
 const partParams = {
-  Expires: 3600
+  Expires: 300
 };
 
 // validateProvided()
-// Checks if provided data is a string or number of some length or value 
+// Checks if provided data is a string or number of some length or value
 // @param data - The data posted in the request
 function validateProvided(data) {
   return new Promise((res, rej) => {
@@ -70,8 +70,7 @@ module.exports.handler = async (event, context) => {
     partParams.UploadId = postObj.uploadid;
     partParams.PartNumber = postObj.partnumber;
     console.log("partParams:"+JSON.stringify(partParams,null,2)); // DEBUG:
-  })  // putParams are set...
-  .then(async () => {
+    // partParams are set 
     return await S3.getSignedUrlPromise(
       'uploadPart',
       partParams
