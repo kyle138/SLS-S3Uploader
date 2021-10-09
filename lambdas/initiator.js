@@ -15,7 +15,7 @@ const S3 = new AWS.S3({
 const multiParams = {
   Bucket: "BUCKETHOLDER",
   Key: "KEYHOLDER",
-  ContentType: 'application/pdf'
+  ContentType: 'application/pdf'  // ******** This needs to be set dynamically *******
 };
 
 // validateFile()
@@ -111,12 +111,7 @@ module.exports.handler = async (event, context) => {
       Key: multiResp.Key,
       UploadId: multiResp.UploadId
     };
-  })  // multiResp created
-  .then(async(res) => { // return multiResp to client
-    console.log('response returned:'+JSON.stringify(res,null,2)); // DEBUG:
-//    return await createResponseObject("200", res);
-    return res;
-  })
+  })  // multiResp returned
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
     return await createResponseObject("400", err.toString());
