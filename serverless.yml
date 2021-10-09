@@ -1,4 +1,4 @@
-service: s3uploaderpresigner
+service: s3uploader
 # app and org for use with dashboard.serverless.com
 app: s3uploader
 #org: kyle138
@@ -59,15 +59,15 @@ functions:
     layers:
       - {Ref: CommonModulesLambdaLayer}
     events:
-      - httpApi: 'POST /post/getupid'
+      - httpApi: 'POST /post/initiate'
   presigner:
     handler: lambdas/presigner.handler
-    description: "triggered by APIG, returns presigned URLs for anonymous upload to S3 bucket."
+    description: "triggered by APIG, returns presigned URLs for putPart anonymous upload to S3 bucket."
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
     events:
-      - httpApi: 'POST /post/getupu'
+      - httpApi: 'POST /post/presign'
   terminator:
     handler: lambdas/terminator.handler
     description: "triggered by APIG, Completes the multipart upload."
