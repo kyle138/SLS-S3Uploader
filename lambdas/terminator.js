@@ -10,14 +10,11 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-const termParams = {
-  Bucket: "BUCKETHOLDER",
-  Key: "KEYHOLDER",
-  UploadId: "UPLOADIDHOLDER"
-};
+const termParams = {};
 
 // validateProvided()
 // Checks if provided data is a string of some length
+// or an object (array) with valid items
 // @param data - The data posted in the request
 function validateProvided(data) {
   return new Promise(async (res, rej) => {
@@ -37,7 +34,7 @@ function validateProvided(data) {
         } else {
           await Promise.all(data.map(async (part) => await validatePart(part)))
           .then(() => {
-            console.log('Keep all promises'); // DEBUG:
+            console.log('validateProvided: All parts valid'); // DEBUG:
             return res();
           })
           .catch((err) => {
