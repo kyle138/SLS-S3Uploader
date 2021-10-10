@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Test Input type file</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+  <body>
+
+    <div id="formdiv">
+      <form class="dropform" name="uploadForm">
+        <div id="emailfield">
+          <label for="emailElem">Enter a valid email address</label>
+          <input type="email" id="emailElem" placeholder="Email address">
+        </div>
+        <div id="droparea">
+          <p>Select or Drag and Drop files to upload</p>
+          <label class="button" for="fileElem">Select some files</label>
+          <input type="file" id="fileElem" onchange="handleFiles(this.files)" multiple>
+        </div>
+        <div class="container-fluid s3u-files"></div>
+        <div id="submitbtn">
+          <input type="button" id="submitbtn" value="Submit" onclick="submitform()">
+        </div>
+      </form>
+
+    </div>
+
+    <script src="js/filedrop.js" charset="utf-8"></script>
+
+  </body>
+</html>
