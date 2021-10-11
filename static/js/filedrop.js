@@ -1,3 +1,5 @@
+'use strict';
+
 let dropArea = document.getElementById('droparea');
 dropArea.addEventListener('drop', handleDrop, false);
 
@@ -26,13 +28,20 @@ function unhighlight(e) {
 
 // Files dropped in the dropzone kickoff the whole process
 function handleDrop(e) {
-  let dt = e.dataTransfer;
-  let files = dt.files;
-
   console.log('handleDrop:'); // DEBUG:
   console.log(e);           // DEBUG:
-  handleFiles(files);
+
+  // get the list of files from the event.
+  let files = e.dataTransfer.files;
+  Array.from(files).forEach(uploadFile);
+//  handleFiles(files);
 } // end handleDrop
+
+function handleFile(file) {
+  console.log("handleFile");  // DEBUG:
+  console.log(file);  // DEBUG:
+
+}
 
 function handleFiles(files) {
   console.log("handleFiles"); // DEBUG:
