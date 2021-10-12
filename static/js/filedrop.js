@@ -1,5 +1,8 @@
 'use strict';
 
+const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post";
+var files=[];
+
 let dropArea = document.getElementById('droparea');
 dropArea.addEventListener('drop', handleDrop, false);
 
@@ -33,14 +36,47 @@ function handleDrop(e) {
 
   // get the list of files from the event.
   let files = e.dataTransfer.files;
-  Array.from(files).forEach(uploadFile);
+  Array.from(files).forEach(handleFile);
 //  handleFiles(files);
 } // end handleDrop
 
+// handleFile()
+// Call APIG initiator for file
+// @params {file} file - The file selected for upload
 function handleFile(file) {
   console.log("handleFile");  // DEBUG:
   console.log(file);  // DEBUG:
 
+  files.push(file);
+  let fidx = files.indexOf(file);
+  let fileprog = `
+    <div class="col-sm-4" id="fidx${fidx}">
+      <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
+      <span class="glyphicon glyphicon-file"></span>&nbsp; ${file.name}
+    </div>
+    <div class="col-sm-8 s3u-progress">
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
+          <span class="sr-only">0%</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+//  ********* FIX THIS JQUERY SELECTOR ********************
+  $("#fidx"+fidx).click(function() {
+    alert("Ping!");
+    console.log(`Remove fidx${fidx} ${file.name} from files[]`);  // DEBUG:
+  });
+//  let fileprog = `<span class="glyphicon glyphicon-file"></span>&nbsp; ${file.name}`;
+  $("#filesMsg").append(fileprog);
+
+  let url = APIG+'/initiate';
+/*  fetch(url, {
+    'POST',
+
+  })
+*/
 }
 
 function handleFiles(files) {

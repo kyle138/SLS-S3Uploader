@@ -1,9 +1,8 @@
 #droparea {
   border: 3px dashed #024;
   border-radius: 18px;
-  width: 480px;
   font-family: sans-serif;
-  margin: 40px auto;
+  margin: auto 40px 40px;
   padding: 20px;
 }
 #droparea.highlight {
@@ -39,4 +38,9 @@ p {
 }
 #fileElem {
   display:none;
+}
+#uploadForm {
+  margin: 40px;
+  padding: 20px;
+  border: 1px solid #c7c7c7;
 }

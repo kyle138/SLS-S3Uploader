@@ -3,30 +3,55 @@
   <head>
     <meta charset="utf-8">
     <title>Test Input type file</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/vnd.microsoft.icon">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat|Lato" type="text/css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
   </head>
   <body>
 
-    <div id="formdiv">
-      <form class="dropform" name="uploadForm">
-        <div id="emailfield">
-          <label for="emailElem">Enter a valid email address</label>
-          <input type="email" id="emailElem" placeholder="Email address">
-        </div>
-        <div id="droparea">
-          <p>Select or Drag and Drop files to upload</p>
-          <label class="button" for="fileElem">Select some files</label>
-          <input type="file" id="fileElem" onchange="handleFiles(this.files)" multiple>
-        </div>
-        <div class="container-fluid s3u-files"></div>
-        <div id="submitbtn">
-          <input type="button" id="submitbtn" value="Submit" onclick="submitform()">
-        </div>
-      </form>
+  <form class="form-horizontal" id="uploadForm" novalidate>
+    <div class="form-group">
+      <label class="control-label col-sm-3" for="email">Enter a valid email address</label>
+      <div class="col-sm-9">
+        <input type="email" class="form-control" id="email" placeholder="Email Address">
+
+        <div class="col-sm-12" id="emailMsg"></div>
+      </div>
+    </div>
+    <div class="form-group container-fluid">
+      <div id="droparea">
+        <p class="text-center">Select or Drag and Drop files to upload</p>
+        <label class="button" for="fileElem">Select some files</label>
+        <input type="file" id="fileElem" onchange="handleFiles(this.files)" multiple>
+      </div>
+      <div class="container-fluid s3u-files" id="filesMsg"></div>
 
     </div>
+    <div class="form-group">
+      <div class="col-sm-6 btn-wrapper text-center" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
+        <button type="button" class="btn btn-primary btn-lg" id="submitbtn" onclick="submitform()" style="pointer-events: none;"  disabled>Submit</button>
+      </div>
+      <div class="com-sm-6 btn-wrapper text-center">
+        <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" onclick="resetform()">Cancel</button>
+      </div>
+    </div>
 
+  </form>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="js/filedrop.js" charset="utf-8"></script>
+    <script src="js/emailvldtr.js" charset="utf-8"></script>
 
+    <script type="text/javascript">
+      $(function() {
+        $(".btn-wrapper").tooltip();
+      })
+
+
+    </script>
   </body>
 </html>
