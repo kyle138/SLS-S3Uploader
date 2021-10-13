@@ -2,6 +2,40 @@
 
 const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post";
 var files=[];
+var eml = {
+  "valid": false
+};
+
+// email validator
+// Very basic regex of email provided.
+// Must contain a @ and . with some other chars.
+// Email will be further validated by Initiator lambda.
+$("#email").change(function() {
+  eml.email = $("#email").val();
+  if(eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) {
+    eml.valid = false;
+    console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
+    $("#row-files").fadeOut();
+    $("#emailMsg").addClass("alert alert-danger");
+    $("#emailMsg").html(
+      "You must enter a valid email address."
+    );
+    $("#email").tooltip({
+      "container": "body",
+      "html": true,
+      "placement": "top",
+      "title": "Please enter a valid email address."
+    });
+  } else {
+    eml.valid = true;
+    console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
+//    $("#submitbtn").removeClass('disabled');    *********FIGURE OUT HOW TO ENABLE BUTTON *******
+    $("#emailMsg").html("");
+    $("#emailMsg").removeClass("alert alert-danger");
+    $("#row-files").fadeIn();
+  }
+})
+
 
 let dropArea = document.getElementById('droparea');
 dropArea.addEventListener('drop', handleDrop, false);
@@ -49,41 +83,42 @@ function handleFile(file) {
 
   files.push(file);
   let fidx = files.indexOf(file);
-  let fileprog = `
-    <div class="col-sm-4" id="fidx${fidx}">
-      <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
-      <span class="glyphicon glyphicon-file"></span>&nbsp; ${file.name}
-    </div>
-    <div class="col-sm-8 s3u-progress">
-      <div class="progress">
-        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
-          <span class="sr-only">0%</span>
+  let fileprog = $(`
+    <div class="container-fluid" id="fidx${fidx}">
+      <div class="col-sm-4">
+        <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
+        <span class="glyphicon glyphicon-file"></span>&nbsp; ${file.name}
+      </div>
+      <div class="col-sm-8 s3u-progress">
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
+            <span class="sr-only">0%</span>
+          </div>
         </div>
       </div>
     </div>
-  `;
+  `);
 
-//  ********* FIX THIS JQUERY SELECTOR ********************
-  $("#fidx"+fidx).click(function() {
-    alert("Ping!");
-    console.log(`Remove fidx${fidx} ${file.name} from files[]`);  // DEBUG:
+  $(".s3u-remove",fileprog).on("click", function() {
+    console.log(`removeFile: ${fidx}`);  // DEBUG:
+    files.pop(fidx);
+    $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
   });
-//  let fileprog = `<span class="glyphicon glyphicon-file"></span>&nbsp; ${file.name}`;
+
   $("#filesMsg").append(fileprog);
 
   let url = APIG+'/initiate';
-/*  fetch(url, {
-    'POST',
+  let initDate = {
+    "email": "test"
+  };
+  console.log(`eml: ${eml}`);
 
-  })
-*/
+  // fetch(url, {
+  //   'POST',
+  //
+  // })
+
 }
-
-function handleFiles(files) {
-  console.log("handleFiles"); // DEBUG:
-  console.log(files);       // DEBUG:
-  Array.from(files).forEach(uploadFile);
-} // End handleFiles
 
 function uploadFile(file) {
   console.log(`uploadFile:`); // DEBUG:
