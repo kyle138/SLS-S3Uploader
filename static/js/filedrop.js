@@ -2,9 +2,8 @@
 
 const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post";
 var files=[];
-var eml = {
-  "valid": false
-};
+var eml = {"valid": false};
+var filereaders=[];
 
 // email validator
 // Very basic regex of email provided.
@@ -15,6 +14,7 @@ $("#email").change(function() {
   if(eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) {
     eml.valid = false;
     console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
+    checkStatus();
     $("#row-files").fadeOut();
     $("#emailMsg").addClass("alert alert-danger");
     $("#emailMsg").html(
@@ -29,14 +29,15 @@ $("#email").change(function() {
   } else {
     eml.valid = true;
     console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
-//    $("#submitbtn").removeClass('disabled');    *********FIGURE OUT HOW TO ENABLE BUTTON *******
+    checkStatus();
     $("#emailMsg").html("");
     $("#emailMsg").removeClass("alert alert-danger");
     $("#row-files").fadeIn();
   }
 })
 
-
+// dropArea
+// defines area for drag and drop file uploads
 let dropArea = document.getElementById('droparea');
 dropArea.addEventListener('drop', handleDrop, false);
 
@@ -63,21 +64,42 @@ function unhighlight(e) {
   dropArea.classList.remove('highlight');
 }
 
-// Files dropped in the dropzone kickoff the whole process
+// handleDrop
+// Catch files dropped in the droparea and send to handleFiles()
 function handleDrop(e) {
   console.log('handleDrop:'); // DEBUG:
   console.log(e);           // DEBUG:
 
-  // get the list of files from the event.
-  let files = e.dataTransfer.files;
-  Array.from(files).forEach(handleFile);
-//  handleFiles(files);
+  // handle the list of files from the event.
+  handleFiles(e.dataTransfer.files);
+
 } // end handleDrop
+
+// handleFiles
+// For all files being selected via input button or droparea, send to handleFile() for processing
+// Then hand off to initiator()??
+//  ***************** So, should handleFile start the multipart for each file? Or [Submit] *********
+function handleFiles(files) {
+  console.log("handleFiles"); // DEBUG:
+  Promise.all(
+    Array.from(files).map( async file => {
+      return await handleFile(file);
+    })  // End map
+  ) // End Promise.All
+  .then(async (results)=> {
+    console.log("Promise.all.then");
+    checkStatus();
+    console.log(results);
+  })  // End promise.all.then
+  .catch((err) => {
+    console.log('handleFiles:catch',err);
+  }); // End Promise.all.catch
+} // End handleFiles
 
 // handleFile()
 // Call APIG initiator for file
 // @params {file} file - The file selected for upload
-function handleFile(file) {
+async function handleFile(file) {
   console.log("handleFile");  // DEBUG:
   console.log(file);  // DEBUG:
 
@@ -103,6 +125,7 @@ function handleFile(file) {
     console.log(`removeFile: ${fidx}`);  // DEBUG:
     files.pop(fidx);
     $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
+    checkStatus();
   });
 
   $("#filesMsg").append(fileprog);
@@ -111,7 +134,7 @@ function handleFile(file) {
   let initDate = {
     "email": "test"
   };
-  console.log(`eml: ${eml}`);
+  console.log(`eml: `+JSON.stringify(eml,null,2));  // DEBUG:
 
   // fetch(url, {
   //   'POST',
@@ -119,6 +142,19 @@ function handleFile(file) {
   // })
 
 }
+
+// checkStatus
+// Enables or disables the [Submit] button as the email and file fields are filled out
+function checkStatus() {
+  console.log("checkStatus"); // DEBUG:
+  if (eml.valid && files.length > 0) {
+    console.log("enable");  // DEBUG:
+    $("#submitbtn").removeAttr('style').removeClass('disabled');
+  } else {
+    console.log("disable"); // DEBUG:
+    $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
+  }
+} // End checkStatus
 
 function uploadFile(file) {
   console.log(`uploadFile:`); // DEBUG:
