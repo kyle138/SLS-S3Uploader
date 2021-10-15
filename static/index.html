@@ -21,18 +21,18 @@
       </div>
     </div>
     <div class="collapse" id="row-files">
-      <div class="form-group container-fluid" id="row-files">
+      <div class="form-group container-fluid" id="row-filedrops">
         <div id="droparea">
           <label class="button" for="fileElem">Select some files</label>
           <p class="text-center">Select or Drag and Drop files to upload</p>
-          <input type="file" id="fileElem" onchange="handleFiles(this.files)" multiple>
+          <input type="file" id="fileElem" multiple>
         </div>
         <div class="container-fluid s3u-files" id="filesMsg"></div>
 
       </div>
       <div class="form-group" id="row-btns">
         <div class="col-sm-6 btn-wrapper text-center" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
-          <button type="button" class="btn btn-primary btn-lg disabled" id="submitbtn" onclick="submitform()" style="pointer-events: none">Submit</button>
+          <button type="button" class="btn btn-primary btn-lg disabled" id="submitbtn" style="pointer-events: none">Submit</button>
         </div>
         <div class="com-sm-6 btn-wrapper text-center">
           <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" onclick="resetform()">Cancel</button>

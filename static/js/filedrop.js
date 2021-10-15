@@ -1,15 +1,47 @@
 'use strict';
 
 const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post";
-var files=[];
-var eml = {"valid": false};
-var filereaders=[];
+var files=[],
+    multis=[],
+    filereaders=[],
+    eml = {"valid": false};
 
-// email validator
+// Process values in email field
+$("#email").change(() => {
+  validateEml();
+}); // End email validator
+
+// Intercept enter key in the email field
+$("#email").keypress((e) => {
+  if(e.which == 13) {
+    console.log("enter");
+    e.preventDefault();
+    if(checkStatus()) initiator();
+    else validateEml();
+  }
+}); // End email field interceptor
+
+// Process files selected in the [Select some files] button
+$("#fileElem").change((e) => {
+  handleFiles(e.originalEvent.target.files);
+}); // End process files
+
+// submit button
+// Intercept submit button clicks
+// fadeOut droparea to prevent further files being added
+// and initiate initiator()
+$("#submitbtn").click(() => {
+  if( checkStatus() ) {
+    $("#droparea").fadeOut();
+    initiator();
+  }
+}); // End submit button
+
+// validateEml
 // Very basic regex of email provided.
 // Must contain a @ and . with some other chars.
 // Email will be further validated by Initiator lambda.
-$("#email").change(function() {
+function validateEml() {
   eml.email = $("#email").val();
   if(eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) {
     eml.valid = false;
@@ -34,24 +66,22 @@ $("#email").change(function() {
     $("#emailMsg").removeClass("alert alert-danger");
     $("#row-files").fadeIn();
   }
-})
+} // End validateEml
 
 // dropArea
 // defines area for drag and drop file uploads
 let dropArea = document.getElementById('droparea');
 dropArea.addEventListener('drop', handleDrop, false);
-
-// Override defaults
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+// Override defaults for droparea
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
   dropArea.addEventListener(eventName, preventDefaults, false)
 });
 function preventDefaults(e) {
   e.preventDefault();
   e.stopPropagation();
 }
-
 // Add/remove highlight on mouse in / mouse out
-['dragenter', 'dragover'].forEach(eventName => {
+['dragenter', 'dragover'].forEach((eventName) => {
   dropArea.addEventListener(eventName, highlight, false)
 });
 ['dragleave', 'drop'].forEach((eventName) => {
@@ -72,7 +102,6 @@ function handleDrop(e) {
 
   // handle the list of files from the event.
   handleFiles(e.dataTransfer.files);
-
 } // end handleDrop
 
 // handleFiles
@@ -82,14 +111,13 @@ function handleDrop(e) {
 function handleFiles(files) {
   console.log("handleFiles"); // DEBUG:
   Promise.all(
-    Array.from(files).map( async file => {
+    Array.from(files).map( async (file) => {
       return await handleFile(file);
     })  // End map
   ) // End Promise.All
-  .then(async (results)=> {
-    console.log("Promise.all.then");
+  .then(async () => {
+    console.log("Promise.all.then");  // DEBUG:
     checkStatus();
-    console.log(results);
   })  // End promise.all.then
   .catch((err) => {
     console.log('handleFiles:catch',err);
@@ -97,11 +125,13 @@ function handleFiles(files) {
 } // End handleFiles
 
 // handleFile()
-// Call APIG initiator for file
+// Add file progress row to filesMsg div
 // @params {file} file - The file selected for upload
-async function handleFile(file) {
+function handleFile(file) {
   console.log("handleFile");  // DEBUG:
   console.log(file);  // DEBUG:
+
+  // *************** Need to add check for folder ****************
 
   files.push(file);
   let fidx = files.indexOf(file);
@@ -121,7 +151,7 @@ async function handleFile(file) {
     </div>
   `);
 
-  $(".s3u-remove",fileprog).on("click", function() {
+  $(".s3u-remove",fileprog).on("click", () => {
     console.log(`removeFile: ${fidx}`);  // DEBUG:
     files.pop(fidx);
     $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
@@ -129,19 +159,7 @@ async function handleFile(file) {
   });
 
   $("#filesMsg").append(fileprog);
-
-  let url = APIG+'/initiate';
-  let initDate = {
-    "email": "test"
-  };
-  console.log(`eml: `+JSON.stringify(eml,null,2));  // DEBUG:
-
-  // fetch(url, {
-  //   'POST',
-  //
-  // })
-
-}
+} // End handleFile
 
 // checkStatus
 // Enables or disables the [Submit] button as the email and file fields are filled out
@@ -150,12 +168,70 @@ function checkStatus() {
   if (eml.valid && files.length > 0) {
     console.log("enable");  // DEBUG:
     $("#submitbtn").removeAttr('style').removeClass('disabled');
+    return true;
   } else {
     console.log("disable"); // DEBUG:
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
+    return false;
   }
 } // End checkStatus
 
+// initiator
+// Initiate the upload process for each file in files[];
+function initiator() {
+  console.log("Initiator");
+  let url = APIG+'/initiate';
+  let initData = {
+    "email": eml.email
+  };
+  console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
+  console.log(files); // DEBUG:
+
+  Promise.all(
+    files.map( async (file) => {
+      initData.file = file.name;
+      return await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(initData)
+      })
+      .then(res => res.json())
+      .then((data) => {
+        console.log("Initiator:fetch.then.then data");  // DEBUG:
+        console.log(data); // DEBUG:
+        return {
+          "file": file,
+          "multi": data
+        };
+      })  // End fetch.then.then
+      .catch((err) => {
+        console.log("Initiator:fetch.catch"); // DEBUG:
+        console.log(err); // DEBUG:
+        return err;
+      }); // End fetch.catch
+    })  // End map
+  )
+  .then((data) => {
+    console.log("Initiator:Promise.all.then:data"); // DEBUG:
+    console.log(data);  // DEBUG:
+/*
+    // ********************************************************
+    Initiate Multipart Upload has been called,
+    An array of objects containing the {file, multi} has been returned
+    in this then() Promise.all over the array and call file-slicer-uploader()
+    in next then() call terminator()
+    // ********************************************************
+  */
+  })
+  .catch((err) => {
+    console.log("Initiator:Promise.all.catch:err"); // DEBUG:
+    console.log(err); // DEBUG:
+  })
+
+} // End initiator
+
+
+
+// ****SCRATCH****
 function uploadFile(file) {
   console.log(`uploadFile:`); // DEBUG:
   console.log(file);        // DEBUG:
