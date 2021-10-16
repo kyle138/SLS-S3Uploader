@@ -41,9 +41,10 @@ $("#submitbtn").click(() => {
 // Very basic regex of email provided.
 // Must contain a @ and . with some other chars.
 // Email will be further validated by Initiator lambda.
-function validateEml() {
+function validateEml(mxpass=true) {
+  console.log(`mxpass: ${mxpass}`); // DEBUG:
   eml.email = $("#email").val();
-  if(eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) {
+  if((eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) || !mxpass) {
     eml.valid = false;
     console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
@@ -194,7 +195,17 @@ function initiator() {
         method: 'POST',
         body: JSON.stringify(initData)
       })
-      .then(res => res.json())
+      .then(async (res) => {
+        console.log(res);
+        if(res.ok) {
+          return  await res.json();
+        } else {
+          // let err= await res.json();
+          let reserr=await res.json();
+          console.log(reserr);  // DEBUG:
+          throw reserr.response;
+        }
+      })
       .then((data) => {
         console.log("Initiator:fetch.then.then data");  // DEBUG:
         console.log(data); // DEBUG:
@@ -206,10 +217,10 @@ function initiator() {
       .catch((err) => {
         console.log("Initiator:fetch.catch"); // DEBUG:
         console.log(err); // DEBUG:
-        return err;
+        throw err;
       }); // End fetch.catch
     })  // End map
-  )
+  ) // Promise.all
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
@@ -221,11 +232,30 @@ function initiator() {
     in next then() call terminator()
     // ********************************************************
   */
-  })
+  })  // Promise.all.then
   .catch((err) => {
     console.log("Initiator:Promise.all.catch:err"); // DEBUG:
     console.log(err); // DEBUG:
-  })
+    switch (err) {
+      case "Error: Invalid email domain.":
+      case "Error: Invalid email format.":
+        console.log("switch:invalid domain"); // DEBUG:
+        validateEml(false);
+        break;
+      case "Error: File name invalid":
+        $("#emailMsg").addClass("alert alert-danger");
+        $("#emailMsg").html(
+          "One of your files has an invalid file name."
+        );
+        break;
+      default:
+        console.log("Default"); // DEBUG: 
+        $("#emailMsg").addClass("alert alert-danger");
+        $("#emailMsg").html(err);
+    } // End switch
+    // if(err = "Error: Invalid email domain.") {
+    // }
+  }); // Promise.all.catch
 
 } // End initiator
 
