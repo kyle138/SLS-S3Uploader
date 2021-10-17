@@ -18,19 +18,26 @@ const multiParams = {
   ContentType: 'application/pdf'  // ******** This needs to be set dynamically *******
 };
 
-// validateFile()
-// Checks if file is a string of some length
-// @param {string} file - The name of the file to upload
-function validateFile(file) {
+// validateFilename()
+// Checks if filename is a string of some length
+// @param {string} filename - The name of the file to upload
+function validateFilename(name) {
   return new Promise((res, rej) => {
-    if( typeof file !== 'string' || file.length < 1 ) {
-      console.error(`validateFile(): ${file}`); // DEBUG:
+    if( typeof name !== 'string' || name.length < 1 ) {
+      console.error(`validateFilename(): ${name}`); // DEBUG:
       return rej(new Error('File name invalid'));
     } else {
       return res();
     }
   }); // End Promise
 } // End validateFile
+
+// validateFiletype()
+// Checks if filetype is an accepted MIME type
+// *********************** finish this function ******************
+function validateFiletype(type) {
+  
+} // End validateFiletype
 
 // validateEmail()
 // Check if provided email address is valid
@@ -97,7 +104,7 @@ module.exports.handler = async (event, context) => {
   // Check for required fields in postObj
   return await Promise.all([
     validateEmail(postObj.email),
-    validateFile(postObj.file)
+    validateFilename(postObj.filename)
   ])  // posted values validated...
   .then(async () => { // set multiParams
     multiParams.Bucket = process.env.S3BUCKET;
