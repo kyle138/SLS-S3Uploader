@@ -18,6 +18,60 @@ const multiParams = {
   ContentType: 'application/pdf'  // ******** This needs to be set dynamically *******
 };
 
+// Array of allowed MIME types
+const mimetypes = [
+  'application/epub+zip',
+  'application/gzip',
+  'application/json',
+  'application/msword',
+  'application/pdf',
+  'application/rtf',
+  'application/vnd.oasis.opendocument.presentation',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.rar',
+  'application/vnd.visio',
+  'application/x-7z-compressed'
+  'application/x-bzip',
+  'application/x-bzip2',
+  'application/x-tar',
+  'application/zip',
+  'audio/3gpp',
+  'audio/3gpp2',
+  'audio/aac',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/wav',
+  'audio/webm',
+  'font/otf',
+  'font/ttf',
+  'font/woff',
+  'font/woff2',
+  'image/bmp',
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/svg+xml',
+  'image/tiff',
+  'image/vnd.microsoft.icon',
+  'image/webp',
+  'text/css',
+  'text/csv',
+  'text/plain',
+  'video/3gpp',
+  'video/3gpp2',
+  'video/mp4',
+  'video/mpeg',
+  'video/ogg',
+  'video/webm',
+  'video/x-msvideo',
+];
+
 // validateFilename()
 // Checks if filename is a string of some length
 // @param {string} filename - The name of the file to upload
@@ -36,7 +90,9 @@ function validateFilename(name) {
 // Checks if filetype is an accepted MIME type
 // *********************** finish this function ******************
 function validateFiletype(type) {
-  
+  return new Promise((res, rej) => {
+
+  })
 } // End validateFiletype
 
 // validateEmail()
