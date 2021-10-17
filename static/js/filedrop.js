@@ -46,13 +46,12 @@ function validateEml(mxpass=true) {
   eml.email = $("#email").val();
   if((eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) || !mxpass) {
     eml.valid = false;
+    let emailMsg = mxpass ? "You must enter a valid email address." : "Try a different email address. The one you entered cannot be verified.";
     console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
     $("#row-files").fadeOut();
     $("#emailMsg").addClass("alert alert-danger");
-    $("#emailMsg").html(
-      "You must enter a valid email address."
-    );
+    $("#emailMsg").html( emailMsg );
     $("#email").tooltip({
       "container": "body",
       "html": true,
@@ -97,23 +96,37 @@ function unhighlight(e) {
 
 // handleDrop
 // Catch files dropped in the droparea and send to handleFiles()
-function handleDrop(e) {
+async function handleDrop(e) {
   console.log('handleDrop:'); // DEBUG:
   console.log(e);           // DEBUG:
-
+  console.log(e.dataTransfer.files);  // DEBUG:
+  console.log(e.dataTransfer.types); // DEBUG:
+  let noFolders = Array.from(e.dataTransfer.files).map(file => {
+    if (!file.type && file.size%4096 == 0) {
+      console.log(`Folders now allowed: ${file.name}`); // DEBUG:
+      return null;
+      // Do something here? ************************
+    } else {
+      return file;
+    }
+  }); // End map
+  console.log('noFolders[]',noFolders); // DEBUG:
   // handle the list of files from the event.
-  handleFiles(e.dataTransfer.files);
+  handleFiles(noFolders);
 } // end handleDrop
 
 // handleFiles
 // For all files being selected via input button or droparea, send to handleFile() for processing
-// Then hand off to initiator()??
-//  ***************** So, should handleFile start the multipart for each file? Or [Submit] *********
-function handleFiles(files) {
+// Then call checkStatus() to check if ok to submit
+function handleFiles(fls) {
   console.log("handleFiles"); // DEBUG:
   Promise.all(
-    Array.from(files).map( async (file) => {
-      return await handleFile(file);
+    Array.from(fls).map( async (file) => {
+      if(file) {
+        return await handleFile(file);
+      } else {
+        return null;
+      }
     })  // End map
   ) // End Promise.All
   .then(async () => {
@@ -191,6 +204,7 @@ function initiator() {
   Promise.all(
     files.map( async (file) => {
       initData.file = file.name;
+      initData.filetype = file.type;
       return await fetch(url, {
         method: 'POST',
         body: JSON.stringify(initData)
@@ -249,7 +263,7 @@ function initiator() {
         );
         break;
       default:
-        console.log("Default"); // DEBUG: 
+        console.log("Default"); // DEBUG:
         $("#emailMsg").addClass("alert alert-danger");
         $("#emailMsg").html(err);
     } // End switch
