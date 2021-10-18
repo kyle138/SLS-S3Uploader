@@ -203,7 +203,7 @@ function initiator() {
 
   Promise.all(
     files.map( async (file) => {
-      initData.file = file.name;
+      initData.filename = file.name;
       initData.filetype = file.type;
       return await fetch(url, {
         method: 'POST',
@@ -214,7 +214,7 @@ function initiator() {
         if(res.ok) {
           return  await res.json();
         } else {
-          // let err= await res.json();
+          // If the APIG response isn't 200, parse the response and throw it.
           let reserr=await res.json();
           console.log(reserr);  // DEBUG:
           throw reserr.response;
@@ -229,7 +229,7 @@ function initiator() {
         };
       })  // End fetch.then.then
       .catch((err) => {
-        console.log("Initiator:fetch.catch"); // DEBUG:
+        console.log("Initiator:fetch.catch",file); // DEBUG:
         console.log(err); // DEBUG:
         throw err;
       }); // End fetch.catch
@@ -260,6 +260,14 @@ function initiator() {
         $("#emailMsg").addClass("alert alert-danger");
         $("#emailMsg").html(
           "One of your files has an invalid file name."
+        );
+        break;
+      case err.startsWith('Error: Filetype invalid.') ? err : '' :
+        // Yeah, I know, but I don't know why this works either.
+        console.log("FILETYPE");
+        $("#emailMsg").addClass("alert alert-danger");
+        $("#emailMsg").html(
+          err + " Remove the file and try again."
         );
         break;
       default:
