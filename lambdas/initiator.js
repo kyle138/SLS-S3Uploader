@@ -36,7 +36,7 @@ const mimetypes = [
   'application/vnd.ms-powerpoint',
   'application/vnd.rar',
   'application/vnd.visio',
-  'application/x-7z-compressed'
+  'application/x-7z-compressed',
   'application/x-bzip',
   'application/x-bzip2',
   'application/x-tar',
