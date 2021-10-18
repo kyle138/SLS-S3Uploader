@@ -153,7 +153,7 @@ function handleFile(file) {
     <div class="container-fluid" id="fidx${fidx}">
       <div class="col-sm-4">
         <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
-        <span class="glyphicon glyphicon-file"></span>&nbsp; ${file.name}
+        <span class="glyphicon glyphicon-file" id="${file.name}"></span>&nbsp; ${file.name}
       </div>
       <div class="col-sm-8 s3u-progress">
         <div class="progress">
