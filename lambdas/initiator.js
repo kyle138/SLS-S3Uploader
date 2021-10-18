@@ -91,7 +91,11 @@ function validateFilename(name) {
 // *********************** finish this function ******************
 function validateFiletype(type) {
   return new Promise((res, rej) => {
-
+    if (mimetypes.indexOf(type) == -1) {
+      return rej( new Error(`Filetype invalid. ${type} is not an accepted MIME type.`));
+    } else {
+      return res();
+    }
   })
 } // End validateFiletype
 
@@ -160,7 +164,8 @@ module.exports.handler = async (event, context) => {
   // Check for required fields in postObj
   return await Promise.all([
     validateEmail(postObj.email),
-    validateFilename(postObj.filename)
+    validateFilename(postObj.filename),
+    validateFiletype(postObj.filetype)
   ])  // posted values validated...
   .then(async () => { // set multiParams
     multiParams.Bucket = process.env.S3BUCKET;
