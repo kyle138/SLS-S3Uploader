@@ -169,7 +169,8 @@ module.exports.handler = async (event, context) => {
   ])  // posted values validated...
   .then(async () => { // set multiParams
     multiParams.Bucket = process.env.S3BUCKET;
-    multiParams.Key = await createKeyname( postObj.file, postObj.email );
+    multiParams.Key = await createKeyname( postObj.filename, postObj.email );
+    multiParams.ContentType = postObj.filetype;
     console.log("multiParams:"+JSON.stringify(multiParams,null,2)); // DEBUG:
   })  // multiParams are set...
   .then(async () => { // create Multipart upload
