@@ -95,7 +95,7 @@ function unhighlight(e) {
 }
 
 // handleDrop
-// Catch files dropped in the droparea and send to handleFiles()
+// Catch files dropped in the droparea, filter out folders, and send to handleFiles()
 async function handleDrop(e) {
   console.log('handleDrop:'); // DEBUG:
   console.log(e);           // DEBUG:
@@ -103,7 +103,7 @@ async function handleDrop(e) {
   console.log(e.dataTransfer.types); // DEBUG:
   let noFolders = Array.from(e.dataTransfer.files).map(file => {
     if (!file.type && file.size%4096 == 0) {
-      console.log(`Folders now allowed: ${file.name}`); // DEBUG:
+      console.log(`Folders not allowed: ${file.name}`); // DEBUG:
       return null;
       // Do something here? ************************
     } else {
@@ -145,10 +145,10 @@ function handleFile(file) {
   console.log("handleFile");  // DEBUG:
   console.log(file);  // DEBUG:
 
-  // *************** Need to add check for folder ****************
-
-  files.push(file);
-  let fidx = files.indexOf(file);
+  // files.push(file);
+  // let fidx = files.indexOf(file);
+  let fidx = cuid();
+  files[fidx] = file;
   let fileprog = $(`
     <div class="container-fluid" id="fidx${fidx}">
       <div class="col-sm-4">
@@ -179,12 +179,13 @@ function handleFile(file) {
 // Enables or disables the [Submit] button as the email and file fields are filled out
 function checkStatus() {
   console.log("checkStatus"); // DEBUG:
-  if (eml.valid && files.length > 0) {
+  if (eml.valid && Object.keys(files).length > 0) {
     console.log("enable");  // DEBUG:
     $("#submitbtn").removeAttr('style').removeClass('disabled');
     return true;
   } else {
     console.log("disable"); // DEBUG:
+    console.log(`files.length ${Object.keys(files).length}`); // DEBUG:
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
   }
