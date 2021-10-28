@@ -38,6 +38,7 @@ $("#submitbtn").click(() => {
     // Hide the droparea and change the label text.
     let s = (files.length > 1) ? 's are': ' is';
     $("#droparea").fadeOut();
+    $(".s3u-remove").fadeOut('fast');
     $("#filesLbl").html(`The file${s} now uploading...`)
     initiator();
   }
@@ -153,8 +154,13 @@ function handleFile(file) {
       `<div class='row'>Files of type '${file.type}' are not accepted.</div>`
     ).fadeIn('fast');
   } else {
-    files.push(file);
-    let fidx = files.indexOf(file);
+    // files.push(file);
+    // let fidx = files.indexOf(file);
+    let fidx = files.length;
+    files.push({
+      "fidx": fidx,
+      "file": file
+    });
     let fileprog = $(`
       <div class="container-fluid" id="fidx${fidx}">
         <div class="col-sm-4">
@@ -173,7 +179,6 @@ function handleFile(file) {
 
     $(".s3u-remove",fileprog).on("click", () => {
       console.log(`removeFile: ${fidx}`);  // DEBUG:
-      // files.pop(fidx);
       files[fidx] = null;
       $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
       checkStatus();
@@ -230,8 +235,8 @@ function initiator() {
 
   Promise.all(
     files.map( async (file) => {
-      initData.filename = file.name;
-      initData.filetype = file.type;
+      initData.filename = file.file.name;
+      initData.filetype = file.file.type;
       return await fetch(url, {
         method: 'POST',
         body: JSON.stringify(initData)
@@ -265,6 +270,8 @@ function initiator() {
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
+    console.log(data[0].file.name); // DEBUG:
+    handleMultis(data); // handleMultis() doesn't exist
 /*
     // ********************************************************
     Initiate Multipart Upload has been called,
@@ -284,23 +291,20 @@ function initiator() {
         validateEml(false);
         break;
       case "Error: File name invalid":
-        $("#alertMsg").addClass("alert alert-danger");
-        $("#alertMsg").html(
+        $("#alertMsg").addClass("alert alert-danger").html(
           "One of your files has an invalid file name."
-        );
+        ).fadeIn('fast');
         break;
       case err.toString().startsWith('Error: Filetype invalid.') ? err : '' :
         // Yeah, I know, but I don't know why this works either.
         console.log("FILETYPE");
-        $("#alertMsg").addClass("alert alert-danger");
-        $("#alertMsg").html(
+        $("#alertMsg").addClass("alert alert-danger").html(
           err + " Remove the file and try again."
-        );
+        ).fadeIn('fast');
         break;
       default:
         console.log("Default"); // DEBUG:
-        $("#alertMsg").addClass("alert alert-danger");
-        $("#alertMsg").html(err);
+        $("#alertMsg").addClass("alert alert-danger").html(err).fadeIn('fast');
     } // End switch
     // if(err = "Error: Invalid email domain.") {
     // }
