@@ -28,11 +28,17 @@ $("#fileElem").change((e) => {
 
 // submit button
 // Intercept submit button clicks
+// Disable [Submit] button
 // fadeOut droparea to prevent further files being added
 // and initiate initiator()
 $("#submitbtn").click(() => {
   if( checkStatus() ) {
+    // Disable the [Submit] button
+    $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
+    // Hide the droparea and change the label text.
+    let s = (files.length > 1) ? 's are': ' is';
     $("#droparea").fadeOut();
+    $("#filesLbl").html(`The file${s} now uploading...`)
     initiator();
   }
 }); // End submit button
@@ -50,8 +56,7 @@ function validateEml(mxpass=true) {
     console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
     $("#row-files").fadeOut();
-    $("#emailMsg").addClass("alert alert-danger");
-    $("#emailMsg").html( emailMsg );
+    $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
     $("#email").tooltip({
       "container": "body",
       "html": true,
@@ -62,8 +67,8 @@ function validateEml(mxpass=true) {
     eml.valid = true;
     console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
-    $("#emailMsg").html("");
-    $("#emailMsg").removeClass("alert alert-danger");
+    $("#alertMsg").html("");
+    $("#alertMsg").removeClass("alert alert-danger");
     $("#row-files").fadeIn();
   }
 } // End validateEml
@@ -101,15 +106,13 @@ async function handleDrop(e) {
   console.log(e);           // DEBUG:
   console.log(e.dataTransfer.files);  // DEBUG:
   console.log(e.dataTransfer.types); // DEBUG:
-  let noFolders = Array.from(e.dataTransfer.files).map(file => {
-    if (!file.type && file.size%4096 == 0) {
-      console.log(`Folders not allowed: ${file.name}`); // DEBUG:
-      return null;
-      // Do something here? ************************
-    } else {
-      return file;
+  let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
+    if (file.type && file.size%4096 != 0) {
+      console.log(`File added: ${file.name}`); // DEBUG:
+      res.push(file);
     }
-  }); // End map
+    return res;
+  },[]); // End reduce
   console.log('noFolders[]',noFolders); // DEBUG:
   // handle the list of files from the event.
   handleFiles(noFolders);
@@ -145,34 +148,39 @@ function handleFile(file) {
   console.log("handleFile");  // DEBUG:
   console.log(file);  // DEBUG:
 
-  // files.push(file);
-  // let fidx = files.indexOf(file);
-  let fidx = cuid();
-  files[fidx] = file;
-  let fileprog = $(`
-    <div class="container-fluid" id="fidx${fidx}">
-      <div class="col-sm-4">
-        <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
-        <span class="glyphicon glyphicon-file" id="${file.name}"></span>&nbsp; ${file.name}
-      </div>
-      <div class="col-sm-8 s3u-progress">
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
-            <span class="sr-only">0%</span>
+  if (mimetypes.indexOf(file.type) == -1) {
+    $("#alertMsg").addClass("alert alert-warning").append(
+      `<div class='row'>Files of type '${file.type}' are not accepted.</div>`
+    ).fadeIn('fast');
+  } else {
+    files.push(file);
+    let fidx = files.indexOf(file);
+    let fileprog = $(`
+      <div class="container-fluid" id="fidx${fidx}">
+        <div class="col-sm-4">
+          <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
+          <span class="glyphicon glyphicon-file" id="${file.name}"></span>&nbsp; ${file.name}
+        </div>
+        <div class="col-sm-8 s3u-progress">
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
+              <span class="sr-only">0%</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  `);
+    `);
 
-  $(".s3u-remove",fileprog).on("click", () => {
-    console.log(`removeFile: ${fidx}`);  // DEBUG:
-    files.pop(fidx);
-    $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
-    checkStatus();
-  });
+    $(".s3u-remove",fileprog).on("click", () => {
+      console.log(`removeFile: ${fidx}`);  // DEBUG:
+      // files.pop(fidx);
+      files[fidx] = null;
+      $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
+      checkStatus();
+    });
 
-  $("#filesMsg").append(fileprog);
+    $("#filesMsg").append(fileprog);
+  }
 } // End handleFile
 
 // checkStatus
@@ -195,11 +203,29 @@ function checkStatus() {
 // Initiate the upload process for each file in files[];
 function initiator() {
   console.log("Initiator");
+
+  // reset any existing alerts.
+  $("#alertMsg").hide().html("");
+
   let url = APIG+'/initiate';
   let initData = {
     "email": eml.email
   };
   console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
+  console.log(files); // DEBUG:
+
+  // Files removed from the upload list leave nulls in the files[] array,
+  // Remove any nulls before Initiating multipart uploads.
+  let noNulls = files.reduce( (res,file) => {
+    console.log(file);  // DEBUG:
+    if (file != null) {
+      console.log(`File added: ${file}`); //// DEBUG:
+      res.push(file);
+    }
+    return res;
+  },[]);
+
+  files = noNulls;
   console.log(files); // DEBUG:
 
   Promise.all(
@@ -258,23 +284,23 @@ function initiator() {
         validateEml(false);
         break;
       case "Error: File name invalid":
-        $("#emailMsg").addClass("alert alert-danger");
-        $("#emailMsg").html(
+        $("#alertMsg").addClass("alert alert-danger");
+        $("#alertMsg").html(
           "One of your files has an invalid file name."
         );
         break;
-      case err.startsWith('Error: Filetype invalid.') ? err : '' :
+      case err.toString().startsWith('Error: Filetype invalid.') ? err : '' :
         // Yeah, I know, but I don't know why this works either.
         console.log("FILETYPE");
-        $("#emailMsg").addClass("alert alert-danger");
-        $("#emailMsg").html(
+        $("#alertMsg").addClass("alert alert-danger");
+        $("#alertMsg").html(
           err + " Remove the file and try again."
         );
         break;
       default:
         console.log("Default"); // DEBUG:
-        $("#emailMsg").addClass("alert alert-danger");
-        $("#emailMsg").html(err);
+        $("#alertMsg").addClass("alert alert-danger");
+        $("#alertMsg").html(err);
     } // End switch
     // if(err = "Error: Invalid email domain.") {
     // }

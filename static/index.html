@@ -17,17 +17,19 @@
       <div class="col-sm-9">
         <input type="email" class="form-control" id="email" placeholder="Email Address">
 
-        <div class="col-sm-12" id="emailMsg"></div>
+        <div class="col-sm-12" id="alertMsg"></div>
       </div>
     </div>
     <div class="collapse" id="row-files">
-      <div class="form-group container-fluid" id="row-filedrops">
-        <div id="droparea">
-          <label class="button" for="fileElem">Select some files</label>
-          <p class="text-center">Select or Drag and Drop files to upload</p>
-          <input type="file" id="fileElem" multiple>
+      <div class="form-group" id="row-filedrops">
+        <label class="control-label col-sm-3" for="fileElem" id="filesLbl">Select or Drag and Drop files to upload</label>
+        <div class="col-sm-9">
+          <div class="text-center" id="droparea">
+            <label class="button" for="fileElem">Select some files</label>
+            <input type="file" id="fileElem" multiple>
+          </div>
+          <div class="container-fluid filesList" id="filesMsg"></div>
         </div>
-        <div class="container-fluid s3u-files" id="filesMsg"></div>
 
       </div>
       <div class="form-group" id="row-btns">
@@ -45,7 +47,7 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <script src="js/cuid.min.js" charset="utf-8"></script>
+    <script src="js/mimetypes.js" charset="utf-8"></script>
     <script src="js/filedrop.js" charset="utf-8"></script>
 
     <script type="text/javascript">
