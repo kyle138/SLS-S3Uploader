@@ -1,8 +1,11 @@
 'use strict';
 
-const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post";
+const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
+      minPartSize = 5 * 1024 * 1024, // 5MB
+      maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
+      maxParts = 10000; // AWS doesn't allow more than 10,000 parts
 var files=[],
-    multis=[],
+    // multis=[],
     filereaders=[],
     eml = {"valid": false};
 
@@ -73,6 +76,17 @@ function validateEml(mxpass=true) {
     $("#row-files").fadeIn();
   }
 } // End validateEml
+
+// reckonParts
+// Returns the number of parts needed for multipart upload
+function reckonParts(filesize) {
+  let parts = {};
+  parts.size = (filesize / maxParts) < minPartSize
+             ? minPartSize
+             : Math.ceil(filesize / maxParts);
+  parts.num = Math.ceil(filesize / parts.size);
+  return parts;
+}
 
 // dropArea
 // defines area for drag and drop file uploads
@@ -154,11 +168,13 @@ function handleFile(file) {
       `<div class='row'>Files of type '${file.type}' are not accepted.</div>`
     ).fadeIn('fast');
   } else {
-    // files.push(file);
-    // let fidx = files.indexOf(file);
+    // Get number of parts for multipart upload
+    let parts = reckonParts(file.size);
+    // Get next Array index
     let fidx = files.length;
     files.push({
       "fidx": fidx,
+      "parts": parts,
       "file": file
     });
     let fileprog = $(`
@@ -270,8 +286,8 @@ function initiator() {
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
-    console.log(data[0].file.name); // DEBUG:
-    handleMultis(data); // handleMultis() doesn't exist... yet 
+    console.log(data[0].file.file.name); // DEBUG:
+    handleMultis(data); // handleMultis() doesn't exist... yet
 /*
     // ********************************************************
     Initiate Multipart Upload has been called,
@@ -306,13 +322,17 @@ function initiator() {
         console.log("Default"); // DEBUG:
         $("#alertMsg").addClass("alert alert-danger").html(err).fadeIn('fast');
     } // End switch
-    // if(err = "Error: Invalid email domain.") {
-    // }
   }); // Promise.all.catch
-
 } // End initiator
 
+// handleMultis
+// Initiator creates an array of multipart uploads containing
+// UploadId, S3 object key, and the file object.
+function handleMultis(multis) {
+  console.log("handleMultis");
 
+  //
+} // End handleMultis
 
 // ****SCRATCH****
 function uploadFile(file) {
