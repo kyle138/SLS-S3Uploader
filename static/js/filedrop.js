@@ -78,7 +78,7 @@ function validateEml(mxpass=true) {
 } // End validateEml
 
 // reckonParts
-// Returns the number of parts needed for multipart upload
+// Returns the number and size of parts needed for multipart upload
 function reckonParts(filesize) {
   let parts = {};
   parts.size = (filesize / maxParts) < minPartSize
@@ -174,8 +174,8 @@ function handleFile(file) {
     let fidx = files.length;
     files.push({
       "fidx": fidx,
-      "parts": parts,
-      "file": file
+      "multiObj": { "parts": parts },
+      "fileObj": file
     });
     let fileprog = $(`
       <div class="container-fluid" id="fidx${fidx}">
@@ -251,14 +251,14 @@ function initiator() {
 
   Promise.all(
     files.map( async (file) => {
-      initData.filename = file.file.name;
-      initData.filetype = file.file.type;
+      initData.filename = file.fileObj.name;
+      initData.filetype = file.fileObj.type;
       return await fetch(url, {
         method: 'POST',
         body: JSON.stringify(initData)
       })
       .then(async (res) => {
-        console.log(res);
+        console.log(res); // DEBUG:
         if(res.ok) {
           return  await res.json();
         } else {
@@ -267,13 +267,14 @@ function initiator() {
           console.log(reserr);  // DEBUG:
           throw reserr.response;
         }
-      })
+      })  // End fetch.then
       .then((data) => {
         console.log("Initiator:fetch.then.then data");  // DEBUG:
         console.log(data); // DEBUG:
+        file.multiObj.Key = data.Key;
+        file.multiObj.UploadId = data.UploadId;
         return {
-          "file": file,
-          "multi": data
+          "file": file
         };
       })  // End fetch.then.then
       .catch((err) => {
@@ -286,16 +287,8 @@ function initiator() {
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
-    console.log(data[0].file.file.name); // DEBUG:
+    console.log(data[0].file.fileObj.name); // DEBUG:
     handleMultis(data); // handleMultis() doesn't exist... yet
-/*
-    // ********************************************************
-    Initiate Multipart Upload has been called,
-    An array of objects containing the {file, multi} has been returned
-    in this then() Promise.all over the array and call file-slicer-uploader()
-    in next then() call terminator()
-    // ********************************************************
-  */
   })  // Promise.all.then
   .catch((err) => {
     console.log("Initiator:Promise.all.catch:err"); // DEBUG:
@@ -329,33 +322,108 @@ function initiator() {
 // Initiator creates an array of multipart uploads containing
 // UploadId, S3 object key, and the file object.
 function handleMultis(multis) {
-  console.log("handleMultis");
-
-  //
+  console.log("handleMultis",multis);
+  Promise.all(
+    multis.map( async (multi) => {
+      // Get presignedUrl for each part
+      let psUs = [];
+      for (let i = 1; i <= multi.file.multiObj.parts.num; i++) {
+        let psu = await getPresignedUrl({
+          "key": multi.file.multiObj.Key,
+          "uploadid": multi.file.multiObj.UploadId,
+          "partnumber": i
+        });
+        psUs.push({
+          "partnumber": i,
+          "psu": psu
+        });
+      }
+      multi.file.multiObj.psUs = psUs;
+      return multi;
+    }) // End map
+  ) // End Promise.all
+  .then((signedMultis) => {
+    console.log('handleMultis:Promise.all.then signedMultis:',signedMultis);  // DEBUG:
+    Promise.all(
+      signedMultis.map( async (sMu) => {
+        let etags = await putParts(sMu);
+        console.log('etags: ',etags);  // DEBUG:
+        return etags;
+      })  // End map
+    ) // End Promise.all inside a Promise.all
+    .then((etags) => {
+      console.log('Promise.Promise.then etags',etags);
+    })
+    .catch((err) => {
+      console.log('Promise.Promise.catch:',err);  // DEBUG:
+    })
+  })
+  .catch((err)=> {
+    console.log('error: ',err);
+  });
 } // End handleMultis
 
-// ****SCRATCH****
-function uploadFile(file) {
-  console.log(`uploadFile:`); // DEBUG:
-  console.log(file);        // DEBUG:
-  let url = 'TEMPURL';
-  let formData = new FormData();
-
-  formData.append('file', file);
-
-  console.log('formData: ');  // DEBUG:
-  console.log(formData);    // DEBUG:
-
-  fetch(url, {
+// getPresignedUrl
+// returns presigned URL for part provided
+// @param part - Object
+// part.key
+// part.uploadid
+// part.partnumber
+async function getPresignedUrl(part) {
+  console.log('getPresignedUrl: ',part);  // DEBUG:
+  let url = APIG+'/presign';
+  return await fetch(url, {
     method: 'POST',
-    body: formData
+    body: JSON.stringify(part)
   })
-  .then((res) => {
-    console.log('uploadFile:fetch:then'); // DEBUG:
-    console.log(res);               // DEBUG:
-  })
+  .then(async (res) => {
+    console.log('getPresignedUrl:fetch.then',res); // DEBUG:
+    if(res.ok) {
+      return await res.text();
+    } else {
+      // If the APIG response isn't 200, parse the response and throw it.
+      let reserr=await res.json();
+      console.log(reserr);  // DEBUG:
+      throw reserr.response;
+    }
+  })  // End fetch.then
+  .then((data) => {
+    console.log('getPresignedUrl:fetch.then.then data', data);  // DEBUG:
+    return data;
+  })  // End fetch.then.then
   .catch((err) => {
-    console.log('uploadFile:fetch:catch');  // DEBUG:
-    console.log(err);                     // DEBUG:
-  });
-} // End uploadFile
+    console.log('getPresignedUrl:fetch.catch: ', err); // DEBUG:
+    throw err;
+  }); // End fetch.catch
+} // End getPresignedUrl
+
+// putParts
+// For every part of a multi call putPart
+function putParts(file) {
+  console.log('putParts:file ',file);
+  Promise.all(
+    file.file.multiObj.psUs.map( async (psu) => {
+      let etag = await putPart(psu);
+    })  // End map
+  ) // End Promise.all
+  .then((etags) => {
+    console.log('putParts:Promise.all.then: etags',etags);  // DEBUG:
+    return etags
+  }) // End Promise.all.then
+  .catch((err) => {
+    console.log('putParts:Promise.all.catch:',err); // DEBUG:
+  }); // End Promise.all.catch
+} // End putParts
+
+// putPart
+// PUT file to presignedURL
+// Read the File, slice it up by parts, and PUT
+async function putPart(part) {
+  console.log('putPart:part ',part);  // DEBUG:
+  // return await fetch()
+  // ****************************What do I put here? **************************
+  // I have the psu and the partnum but I need the slice of the file to PUT
+  // Do I slice up the file here? Should it be sliced previously?
+  //
+  return 'boo';
+}
