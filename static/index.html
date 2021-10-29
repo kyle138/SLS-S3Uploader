@@ -7,22 +7,26 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="shortcut icon" href="images/favicon.ico" type="image/vnd.microsoft.icon">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat|Lato" type="text/css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </head>
   <body>
 
   <form class="form-horizontal" id="uploadForm" novalidate>
-    <div class="form-group" id="row-email">
-      <label class="control-label col-sm-3" for="email">Enter a valid email address</label>
+    <div class="form-group row" id="row-email">
+      <label class="col-form-label col-sm-3" for="email">Enter a valid email address</label>
       <div class="col-sm-9">
-        <input type="email" class="form-control" id="email" placeholder="Email Address">
-
-        <div class="col-sm-12" id="alertMsg"></div>
+        <div class="input-group">
+          <input type="email" class="form-control" id="email" placeholder="Email Address">
+          <div class="input-group-append">
+            <button type="button" class="btn btn-primary" id="emailchk">Check</button>
+          </div>
+        </div>
+        <div class="container-fluid" id="alertMsg"></div>
       </div>
     </div>
     <div class="collapse" id="row-files">
-      <div class="form-group" id="row-filedrops">
-        <label class="control-label col-sm-3" for="fileElem" id="filesLbl">Select or Drag and Drop files to upload</label>
+      <div class="form-group row" id="row-filedrops">
+        <label class="col-form-label col-sm-3" for="fileElem" id="filesLbl">Select or Drag and Drop files to upload</label>
         <div class="col-sm-9">
           <div class="text-center" id="droparea">
             <label class="button" for="fileElem">Select some files</label>
@@ -32,7 +36,7 @@
         </div>
 
       </div>
-      <div class="form-group" id="row-btns">
+      <div class="form-group row" id="row-btns">
         <div class="col-sm-6 btn-wrapper text-center" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
           <button type="button" class="btn btn-primary btn-lg disabled" id="submitbtn" style="pointer-events: none">Submit</button>
         </div>
@@ -46,7 +50,8 @@
 
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="js/mimetypes.js" charset="utf-8"></script>
     <script src="js/filedrop.js" charset="utf-8"></script>
 
