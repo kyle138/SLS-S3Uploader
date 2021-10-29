@@ -271,7 +271,7 @@ function initiator() {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
     console.log(data[0].file.name); // DEBUG:
-    handleMultis(data); // handleMultis() doesn't exist
+    handleMultis(data); // handleMultis() doesn't exist... yet 
 /*
     // ********************************************************
     Initiate Multipart Upload has been called,
