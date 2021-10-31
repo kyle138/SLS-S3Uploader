@@ -8,6 +8,8 @@
     <link rel="shortcut icon" href="images/favicon.ico" type="image/vnd.microsoft.icon">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat|Lato" type="text/css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
   </head>
   <body>
 
@@ -37,12 +39,15 @@
 
       </div>
       <div class="form-group row" id="row-btns">
-        <div class="col-sm-6 btn-wrapper text-center" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
+        <div class="col-sm-2"></div>
+        <div class="col-sm-3 btn-wrapper text-center" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
           <button type="button" class="btn btn-primary btn-lg disabled" id="submitbtn" style="pointer-events: none">Submit</button>
         </div>
-        <div class="com-sm-6 btn-wrapper text-center">
-          <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" onclick="resetform()">Cancel</button>
+        <div class="col-sm-2">&nbsp;</div>
+        <div class="col-sm-3 btn-wrapper text-center">
+          <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" data-toggle="tooltip" title="Cancel all uploads and reset form." onclick="resetform()">Cancel</button>
         </div>
+        <div class="col-sm-2"></div>
       </div>
     </div>
 
@@ -57,10 +62,8 @@
 
     <script type="text/javascript">
       $(function() {
-        $(".btn-wrapper").tooltip();
+        $('[data-toggle="tooltip"]').tooltip();
       })
-
-
     </script>
   </body>
 </html>

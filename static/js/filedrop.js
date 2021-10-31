@@ -178,10 +178,11 @@ function handleFile(file) {
       "fileObj": file
     });
     let fileprog = $(`
-      <div class="container-fluid" id="fidx${fidx}">
-        <div class="col-sm-4">
-          <span class="glyphicon glyphicon-remove s3u-remove"></span>&nbsp;
-          <span class="glyphicon glyphicon-file" id="${file.name}"></span>&nbsp; ${file.name}
+      <div class="container-fluid row filerow" id="fidx${fidx}">
+        <div class="col-sm-4 text-truncate file">
+          <span class="fas fa-times-circle s3u-remove" data-toggle="tooltip" title="Remove this file from upload queue."></span>&nbsp;
+          <span class="fas fa-file"></span>&nbsp;
+          <span>${file.name}</span>&nbsp;
         </div>
         <div class="col-sm-8 s3u-progress">
           <div class="progress">
