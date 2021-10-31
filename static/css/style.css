@@ -1,8 +1,6 @@
 #droparea {
   border: 3px dashed #024;
   border-radius: 18px;
-  font-family: sans-serif;
-  /* margin: auto 40px 40px; */
   padding: 20px;
 }
 #droparea.highlight {
