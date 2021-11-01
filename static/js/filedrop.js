@@ -231,7 +231,8 @@ function initiator() {
 
   let url = APIG+'/initiate';
   let initData = {
-    "email": eml.email
+    "email": eml.email,
+    "industry": $("#industryElem").val()
   };
   console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
   console.log(files); // DEBUG:
