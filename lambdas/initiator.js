@@ -164,7 +164,7 @@ module.exports.handler = async (event, context) => {
   // Check if Field of Industry was filled out
   if(postObj.industry !== "") {
     console.error("Game: Checkers, Number of Players: 0");  // Bad robot!
-    return await createResponseObject("400","Insufficient empathetic response. Please contact admin.");
+    return await createResponseObject("400","Insufficient empathetic request. Please contact admin.");
   }
 
   // Check for required fields in postObj
