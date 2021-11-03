@@ -38,7 +38,7 @@ $("#fileElem").change((e) => {
 $("#submitbtn").click(() => {
   if( checkStatus() ) {
     // Disable the [Submit] button
-    $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
+    $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled')
     // Hide the droparea and change the label text.
     let s = (files.length > 1) ? 's are': ' is';
     $("#droparea").fadeOut();
@@ -218,11 +218,13 @@ function checkStatus() {
   console.log("checkStatus"); // DEBUG:
   if (eml.valid && Object.keys(files).length > 0) {
     console.log("enable");  // DEBUG:
+    $("#submitbtnwrpr").tooltip('disable');
     $("#submitbtn").removeAttr('style').removeClass('disabled');
     return true;
   } else {
     console.log("disable"); // DEBUG:
     console.log(`files.length ${Object.keys(files).length}`); // DEBUG:
+    $("#submitbtnwrpr").tooltip();
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
   }
