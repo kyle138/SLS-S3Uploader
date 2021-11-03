@@ -3,6 +3,7 @@
 const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
       minPartSize = 5 * 1024 * 1024, // 5MB
       maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
+      maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
 var files=[],
     // multis=[],
@@ -163,7 +164,13 @@ function handleFile(file) {
   console.log("handleFile");  // DEBUG:
   console.log(file);  // DEBUG:
 
-  if (mimetypes.indexOf(file.type) == -1) {
+  // Check if file is over AWS maximum of 5TB
+  // and if file is one of the accepted file types.
+  if (file.size > maxFileSize) {
+    $("#alertMsg").addClass("alert alert-warning").append(
+      `<div class='row'>Files over 5TB in size are not accepted.</div>`
+    ).fadeIn('fast');
+  } else if (mimetypes.indexOf(file.type) == -1) {
     $("#alertMsg").addClass("alert alert-warning").append(
       `<div class='row'>Files of type '${file.type}' are not accepted.</div>`
     ).fadeIn('fast');
@@ -275,9 +282,7 @@ function initiator() {
         console.log(data); // DEBUG:
         file.multiObj.Key = data.Key;
         file.multiObj.UploadId = data.UploadId;
-        return {
-          "file": file
-        };
+        return file;
       })  // End fetch.then.then
       .catch((err) => {
         console.log("Initiator:fetch.catch",file); // DEBUG:
@@ -289,7 +294,7 @@ function initiator() {
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
-    console.log(data[0].file.fileObj.name); // DEBUG:
+    console.log(data[0].fileObj.name); // DEBUG:
     handleMultis(data); // handleMultis() doesn't exist... yet
   })  // Promise.all.then
   .catch((err) => {
@@ -329,10 +334,10 @@ function handleMultis(multis) {
     multis.map( async (multi) => {
       // Get presignedUrl for each part
       let psUs = [];
-      for (let i = 1; i <= multi.file.multiObj.parts.num; i++) {
+      for (let i = 1; i <= multi.multiObj.parts.num; i++) {
         let psu = await getPresignedUrl({
-          "key": multi.file.multiObj.Key,
-          "uploadid": multi.file.multiObj.UploadId,
+          "key": multi.multiObj.Key,
+          "uploadid": multi.multiObj.UploadId,
           "partnumber": i
         });
         psUs.push({
@@ -340,26 +345,35 @@ function handleMultis(multis) {
           "psu": psu
         });
       }
-      multi.file.multiObj.psUs = psUs;
+      multi.multiObj.psUs = psUs;
       return multi;
     }) // End map
   ) // End Promise.all
-  .then((signedMultis) => {
+  .then(async (signedMultis) => {
     console.log('handleMultis:Promise.all.then signedMultis:',signedMultis);  // DEBUG:
-    Promise.all(
+    return await Promise.all(
       signedMultis.map( async (sMu) => {
-        let etags = await putParts(sMu);
-        console.log('etags: ',etags);  // DEBUG:
-        return etags;
+        sMu.multiObj.ETags = await putParts(sMu);
+        console.log(`handleMultis:Promise.all.then signedMultis.map: sMu:`,sMu);  // DEBUG:
+        return sMu;
       })  // End map
     ) // End Promise.all inside a Promise.all
-    .then((etags) => {
-      console.log('Promise.Promise.then etags',etags);
-    })
     .catch((err) => {
       console.log('Promise.Promise.catch:',err);  // DEBUG:
     })
-  })
+  })  // End Promise.all.then
+  .then(async (puttedMultis) => {
+    console.log(`handleMultis:Promise.all.then.then: puttedMultis:`,puttedMultis);  // DEBUG:
+    return await Promise.all(
+      puttedMultis.map( async (pMu) => {
+        pMu.Resp = await terminator(pMu.multiObj);
+        console.log(`pMu.Resp:`,pMu.Resp);  // DEBUG:
+      })  // End map
+    ) // End Promise.all inside a Promise.all
+    .catch((err) => {
+      console.log('Promise2.Promise2.catch:',err);  // DEBUG:
+    })
+  })  // End Promise.all.then.then
   .catch((err)=> {
     console.log('error: ',err);
   });
@@ -401,31 +415,76 @@ async function getPresignedUrl(part) {
 
 // putParts
 // For every part of a multi call putPart
-function putParts(file) {
+async function putParts(file) {
   console.log('putParts:file ',file);
-  Promise.all(
-    file.file.multiObj.psUs.map( async (psu) => {
-      let etag = await putPart(psu);
-    })  // End map
-  ) // End Promise.all
-  .then((etags) => {
-    console.log('putParts:Promise.all.then: etags',etags);  // DEBUG:
-    return etags
-  }) // End Promise.all.then
-  .catch((err) => {
-    console.log('putParts:Promise.all.catch:',err); // DEBUG:
-  }); // End Promise.all.catch
+  let etags = [],
+      reader = new FileReader();
+
+  for( let i = 0; i < file.multiObj.psUs.length; i++ ) {
+    let start = i * file.multiObj.parts.size,
+        end = (i+1) * file.multiObj.parts.size,
+        chunk = (i+1) < file.multiObj.parts.num
+              ? file.fileObj.slice(start, end)
+              : file.fileObj.slice(start);
+    // Use fetch to PUT each chunk to its assigned psUrl
+    let etag = await fetch(file.multiObj.psUs[i].psu, {
+      method: 'PUT',
+      body: chunk
+    })  // End fetch
+    .then(async (res) => {
+      console.log(`putParts:for[${i}]:fetch.then res`,res); // DEBUG:
+      if(res.ok) {
+        console.log(`putParts:for[${i}]:fetch.then ok resHeaders: `,res.headers.get('ETag'));  // DEBUG:
+        return await res.headers.get('ETag');
+      } else {
+        let reserr = await res.json();
+        console.log('res.ok, NOT!',reserr); // DEBUG:
+        throw reserr.response;
+      }
+    })  // End fetch.then
+    .catch((err) => {
+      console.log(`putParts:for[${i}]:fetch.catch err`,err);  // DEBUG:
+    });  // End fetch.catch
+    console.log(`etag: ${etag}`); // DEBUG:
+    etags.push({
+      "ETag": etag,
+      "PartNumber": (i+1)
+    });
+  } // End for loop
+  return etags;
 } // End putParts
 
-// putPart
-// PUT file to presignedURL
-// Read the File, slice it up by parts, and PUT
-async function putPart(part) {
-  console.log('putPart:part ',part);  // DEBUG:
-  // return await fetch()
-  // ****************************What do I put here? **************************
-  // I have the psu and the partnum but I need the slice of the file to PUT
-  // Do I slice up the file here? Should it be sliced previously?
-  //
-  return 'boo';
+// terminator
+// Completes the MultipartUpload
+// @params - object
+// MultiObj containing {String} Key, {String} UploadId, and {Array} ETags
+async function terminator(obj) {
+  console.log('terminator:obj ',obj);
+  let url = APIG+'/terminate';
+  return await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify(
+      {
+        "key": obj.Key,
+        "uploadid": obj.UploadId,
+        "parts": obj.ETags
+      }
+    )
+  })  // End fetch
+  .then(async (res) => {
+    console.log(`terminator:fetch.then res`,res); // DEBUG:
+    if(res.ok) {
+      console.log(`terminate:fetch.then res.ok`);
+      return await res.text();
+    } else {
+      // If the APIG response isn't 200, parse the response and throw it.
+      let reserr=await res.json();
+      console.log(reserr);  // DEBUG:
+      throw reserr.response;
+    }
+  })  // End fetch.then
+  .catch(async (err) => {
+    console.log('terminator:fetch.catch err',err);  // DEBUG:
+    throw err;
+  }); // End fetch.catch
 }
