@@ -6,8 +6,6 @@ const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
       maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
 var files=[],
-    // multis=[],
-    filereaders=[],
     eml = {"valid": false};
 
 // Process values in email field
@@ -119,9 +117,6 @@ function unhighlight(e) {
 // Catch files dropped in the droparea, filter out folders, and send to handleFiles()
 async function handleDrop(e) {
   console.log('handleDrop:'); // DEBUG:
-  console.log(e);           // DEBUG:
-  console.log(e.dataTransfer.files);  // DEBUG:
-  console.log(e.dataTransfer.types); // DEBUG:
   let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
     if (file.type && file.size%4096 != 0) {
       console.log(`File added: ${file.name}`); // DEBUG:
@@ -148,7 +143,7 @@ function handleFiles(fls) {
       }
     })  // End map
   ) // End Promise.All
-  .then(async () => {
+  .then( () => {
     console.log("Promise.all.then");  // DEBUG:
     checkStatus();
   })  // End promise.all.then
@@ -216,7 +211,9 @@ function handleFile(file) {
 // Enables or disables the [Submit] button as the email and file fields are filled out
 function checkStatus() {
   console.log("checkStatus"); // DEBUG:
-  if (eml.valid && Object.keys(files).length > 0) {
+  // trimNulls();
+  let noNulls = trimNulls();
+  if (eml.valid && noNulls.length > 0) {
     console.log("enable");  // DEBUG:
     $("#submitbtnwrpr").tooltip('disable');
     $("#submitbtn").removeAttr('style').removeClass('disabled');
@@ -224,11 +221,25 @@ function checkStatus() {
   } else {
     console.log("disable"); // DEBUG:
     console.log(`files.length ${Object.keys(files).length}`); // DEBUG:
-    $("#submitbtnwrpr").tooltip();
+    $("#submitbtnwrpr").tooltip('enable');
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
   }
 } // End checkStatus
+
+// trimNulls
+// Files removed from the upload list leave nulls in the files[] array,
+// Remove any nulls and reset the files[] array.
+function trimNulls() {
+  return files.reduce( (res,file) => {
+    console.log(file);  // DEBUG:
+    if (file != null) {
+      console.log(`File added: ${file}`); //// DEBUG:
+      res.push(file);
+    }
+    return res;
+  },[]);
+}     // End trimNulls
 
 // initiator
 // Initiate the upload process for each file in files[];
@@ -246,18 +257,20 @@ function initiator() {
   console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
   console.log(files); // DEBUG:
 
-  // Files removed from the upload list leave nulls in the files[] array,
-  // Remove any nulls before Initiating multipart uploads.
-  let noNulls = files.reduce( (res,file) => {
-    console.log(file);  // DEBUG:
-    if (file != null) {
-      console.log(`File added: ${file}`); //// DEBUG:
-      res.push(file);
-    }
-    return res;
-  },[]);
 
-  files = noNulls;
+  // let noNulls = files.reduce( (res,file) => {
+  //   console.log(file);  // DEBUG:
+  //   if (file != null) {
+  //     console.log(`File added: ${file}`); //// DEBUG:
+  //     res.push(file);
+  //   }
+  //   return res;
+  // },[]);
+
+//  trimNulls();
+  files = trimNulls();
+
+
   console.log(files); // DEBUG:
 
   Promise.all(
