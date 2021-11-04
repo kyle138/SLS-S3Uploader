@@ -386,10 +386,9 @@ function handleMultis() {
   .then((data) => {
     console.log(`handleMultis:Promise.all.then.then.then: terminatedMultis:`,data); // DEBUG:
     files = data;
+    $("#uploadForm").hide();
     success();
     //************** This is all going to change with list of QSAs *********************************
-    let s = (files.length > 1) ? 's are' : ' is';
-    $("#submitbtnwrpr").fadeOut();
     $("#filesLbl").addClass("alert alert-success").html( `The upload${s} complete.` ).fadeIn('fast');
   })  // End Promise.all.then.then.then
   .catch((err)=> {
@@ -509,5 +508,48 @@ async function terminator(obj) {
 
 function success() {
   console.log("success::"); // DEBUG:
-  console.log(files); // DEBUG: 
+  console.log(files); // DEBUG:
+
+  Promise.all(
+    files.map( async (file) => {
+      return await succ(file);
+    })  // End map
+  ) // End Promise.all
+  .then((qsas) => {
+    console.log('succ:Promise.all.then',qsas);  // DEBUG:
+    $("#qsaArea").append(`
+      <div class="input-group">
+      <span class="input-group-text">Copy to clipboard</span>
+      <textarea class="form-control" area-label="Copy to clips">${qsas.join('&#10;')}</textarea>
+      </div>
+    `);
+  })  // End Promise.all.then
+  .then(() => {
+    $("#row-success").fadeIn('fast');
+
+  })  // End Promise.all.then.then
+  .catch((err) => {
+    console.log('succ:Promise.all.catch',err);  // DEBUG:
+  }); // End Promise.all.catch
+
+
 }
+
+function succ(file) {
+  return new Promise((res) => {
+    console.log('succ:file: ',file);  // DEBUG:
+    let filesucc = $(`
+      <div class="container-fluid row filerow" id="sidx${file.fidx}">
+        <div class="text-truncate file">
+          <a target="_blank" href="${file.QSA}">
+            <span class="fas fa-file"></span>&nbsp;
+            ${file.fileObj.name}
+          </a>
+        </div>
+      </div>
+    `);
+    $("#successList").append(filesucc);
+    console.log('succ:file.QSA:',file.QSA); // DEBUG:
+    return res(file.QSA+'&#10;');
+  }); // End Promise
+} // End succ

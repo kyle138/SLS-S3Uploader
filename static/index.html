@@ -12,55 +12,69 @@
   </head>
   <body>
 
-  <form class="form-horizontal" id="uploadForm" novalidate>
-    <div class="form-group row" id="row-email">
-      <label class="col-form-label col-sm-3" for="email">Enter a valid email address</label>
-      <div class="col-sm-9">
-        <div class="input-group">
-          <input type="email" class="form-control" id="email" placeholder="Email Address">
-          <div class="input-group-append">
-            <button type="button" class="btn btn-primary" id="emailchk">Check</button>
-          </div>
-        </div>
-        <div class="container-fluid" id="alertMsg"></div>
-      </div>
-    </div>
-    <div class="collapse" id="row-industry">
-      <div class="form-group row" id="row-industry">
-        <label class="col-form-label col-sm-3" for="industryElem" id="industryLbl">*Enter your Field of Industry</label>
+    <form class="form-horizontal" id="uploadForm" novalidate>
+      <div class="form-group row form-row" id="row-email">
+        <label class="col-form-label col-sm-3" for="email">Enter a valid email address</label>
         <div class="col-sm-9">
           <div class="input-group">
-            <input type="text" class="form-control" id="industryElem" placeholder="Field of Industry">
+            <input type="email" class="form-control" id="email" placeholder="Email Address">
+            <div class="input-group-append">
+              <button type="button" class="btn btn-primary" id="emailchk">Check</button>
+            </div>
+          </div>
+          <div class="container-fluid" id="alertMsg"></div>
+        </div>
+      </div>
+      <div class="collapse form-row" id="row-industry">
+        <div class="form-group row" id="frow-industry">
+          <label class="col-form-label col-sm-3" for="industryElem" id="industryLbl">*Enter your Field of Industry</label>
+          <div class="col-sm-9">
+            <div class="input-group">
+              <input type="text" class="form-control" id="industryElem" placeholder="Field of Industry">
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="collapse" id="row-files">
-      <div class="form-group row" id="row-filedrops">
-        <label class="col-form-label col-sm-3" for="fileElem" id="filesLbl">Select or Drag and Drop files to upload</label>
+      <div class="collapse form-row" id="row-files">
+        <div class="form-group row" id="row-filedrops">
+          <label class="col-form-label col-sm-3" for="fileElem" id="filesLbl">Select or Drag and Drop files to upload</label>
+          <div class="col-sm-9">
+            <div class="text-center" id="droparea">
+              <label class="button" for="fileElem">Select some files</label>
+              <input type="file" id="fileElem" multiple>
+            </div>
+            <div class="container-fluid filesList" id="filesMsg"></div>
+          </div>
+        </div>
+        <div class="form-group row" id="row-btns">
+          <div class="col-sm-2"></div>
+          <div class="col-sm-3 btn-wrapper text-center" id="submitbtnwrpr" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
+            <button type="button" class="btn btn-primary btn-lg disabled" id="submitbtn" style="pointer-events: none">Submit</button>
+          </div>
+          <div class="col-sm-2">&nbsp;</div>
+          <div class="col-sm-3 btn-wrapper text-center">
+            <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" data-toggle="tooltip" title="Cancel all uploads and reset form." onclick="resetform()">Cancel</button>
+          </div>
+          <div class="col-sm-2"></div>
+        </div>
+      </div>
+    </form>
+
+    <div class="collapse" id="row-success">
+        <div class="alert alert-success">
+          <p>
+            The upload has completed successfully and is available for download using the provided links.
+          </p>
+          <p>
+            *Links expire after 7 days.
+          </p>
+        </div>
+        <label class="col-form-label col-sm-3" for="successElem" id="successLbl"></label>
         <div class="col-sm-9">
-          <div class="text-center" id="droparea">
-            <label class="button" for="fileElem">Select some files</label>
-            <input type="file" id="fileElem" multiple>
-          </div>
-          <div class="container-fluid filesList" id="filesMsg"></div>
+          <div class="container-fluid filesList" id="successList"></div>
+          <div class="container-fluid QSAlist" id="qsaArea"></div>
         </div>
-      </div>
-      <div class="form-group row" id="row-btns">
-        <div class="col-sm-2"></div>
-        <div class="col-sm-3 btn-wrapper text-center" id="submitbtnwrpr" data-toggle="tooltip" title="You must enter a valid Email address and select at least one file to upload.">
-          <button type="button" class="btn btn-primary btn-lg disabled" id="submitbtn" style="pointer-events: none">Submit</button>
-        </div>
-        <div class="col-sm-2">&nbsp;</div>
-        <div class="col-sm-3 btn-wrapper text-center">
-          <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" data-toggle="tooltip" title="Cancel all uploads and reset form." onclick="resetform()">Cancel</button>
-        </div>
-        <div class="col-sm-2"></div>
-      </div>
     </div>
-
-  </form>
-
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
