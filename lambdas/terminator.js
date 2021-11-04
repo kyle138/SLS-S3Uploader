@@ -106,7 +106,6 @@ module.exports.handler = async (event, context) => {
   })  // Multipart Upload completed
   .then(async (termResp) => {
     console.log('completeMultipartUpload response:'+JSON.stringify(termResp,null,2));  // DEBUG:
-    // ********** Return QSA for bucket/key *****************
     return await S3.getSignedUrlPromise(
       'getObject',
       {
@@ -114,7 +113,6 @@ module.exports.handler = async (event, context) => {
         "Key": postObj.key
       }
     );
-    // return await createResponseObject("200", "Upload Complete");
   })  // End Promise.all.then.then
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
