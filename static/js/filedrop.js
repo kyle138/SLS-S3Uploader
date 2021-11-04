@@ -220,7 +220,7 @@ function checkStatus() {
     return true;
   } else {
     console.log("disable"); // DEBUG:
-    console.log(`files.length ${Object.keys(files).length}`); // DEBUG:
+    console.log(`noNulls.length ${noNulls.length}`); // DEBUG:
     $("#submitbtnwrpr").tooltip('enable');
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
@@ -257,10 +257,7 @@ function initiator() {
   console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
   console.log(files); // DEBUG:
 
-//  trimNulls();
   files = trimNulls();
-
-
   console.log(files); // DEBUG:
 
   Promise.all(
@@ -301,7 +298,8 @@ function initiator() {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
     console.log(data[0].fileObj.name); // DEBUG:
-    handleMultis(data); // handleMultis() doesn't exist... yet
+    files = data;
+    handleMultis();
   })  // Promise.all.then
   .catch((err) => {
     console.log("Initiator:Promise.all.catch:err"); // DEBUG:
@@ -332,12 +330,14 @@ function initiator() {
 } // End initiator
 
 // handleMultis
-// Initiator creates an array of multipart uploads containing
+// The initiator function begins a multipart upload for every file in the files[] array
+// It updates the elements of that array with:
 // UploadId, S3 object key, and the file object.
-function handleMultis(multis) {
-  console.log("handleMultis",multis);
+// handleMultis handles uploading the parts of each multipart upload of each file in the file[] array.
+function handleMultis() {
+  console.log("handleMultis",files);
   Promise.all(
-    multis.map( async (multi) => {
+    files.map( async (multi) => {
       // Get presignedUrl for each part
       let psUs = [];
       for (let i = 1; i <= multi.multiObj.parts.num; i++) {
@@ -355,10 +355,11 @@ function handleMultis(multis) {
       return multi;
     }) // End map
   ) // End Promise.all
-  .then(async (signedMultis) => {
-    console.log('handleMultis:Promise.all.then signedMultis:',signedMultis);  // DEBUG:
+  .then(async (data) => {
+    console.log('handleMultis:Promise.all.then signedMultis:',data);  // DEBUG:
+    files = data;
     return await Promise.all(
-      signedMultis.map( async (sMu) => {
+      files.map( async (sMu) => {
         sMu.multiObj.ETags = await putParts(sMu);
         console.log(`handleMultis:Promise.all.then signedMultis.map: sMu:`,sMu);  // DEBUG:
         return sMu;
@@ -368,21 +369,24 @@ function handleMultis(multis) {
       console.log('Promise.Promise.catch:',err);  // DEBUG:
     })
   })  // End Promise.all.then
-  .then(async (puttedMultis) => {
-    console.log(`handleMultis:Promise.all.then.then: puttedMultis:`,puttedMultis);  // DEBUG:
+  .then(async (data) => {
+    console.log(`handleMultis:Promise.all.then.then: puttedMultis:`,data);  // DEBUG:
+    files = data;
     return await Promise.all(
-      puttedMultis.map( async (pMu) => {
-        pMu.Resp = await terminator(pMu.multiObj);
-        console.log(`pMu.Resp:`,pMu.Resp);  // DEBUG:
-        return await terminator(pMu.multiObj);
+      files.map( async (pMu) => {
+        pMu.QSA = await terminator(pMu.multiObj);
+        console.log(`pMu.QSA:`,pMu.QSA);  // DEBUG:
+        return pMu;
       })  // End map
     ) // End Promise.all inside a Promise.all
     .catch((err) => {
       console.log('Promise2.Promise2.catch:',err);  // DEBUG:
     })
   })  // End Promise.all.then.then
-  .then((tResp) => {
-    console.log(`handleMultis:Promise.all.then.then.then: tREsp: ${tResp}`); // DEBUG:
+  .then((data) => {
+    console.log(`handleMultis:Promise.all.then.then.then: terminatedMultis:`,data); // DEBUG:
+    files = data;
+    success();
     //************** This is all going to change with list of QSAs *********************************
     let s = (files.length > 1) ? 's are' : ' is';
     $("#submitbtnwrpr").fadeOut();
@@ -501,4 +505,9 @@ async function terminator(obj) {
     console.log('terminator:fetch.catch err',err);  // DEBUG:
     throw err;
   }); // End fetch.catch
+}
+
+function success() {
+  console.log("success::"); // DEBUG:
+  console.log(files); // DEBUG: 
 }
