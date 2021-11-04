@@ -279,7 +279,8 @@ function initiator() {
           // If the APIG response isn't 200, parse the response and throw it.
           let reserr=await res.json();
           console.log(reserr);  // DEBUG:
-          throw reserr.response;
+          reserr = reserr.hasOwnProperty('response') ? reserr.response : reserr;
+          throw reserr;
         }
       })  // End fetch.then
       .then((data) => {
@@ -290,7 +291,7 @@ function initiator() {
         return file;
       })  // End fetch.then.then
       .catch((err) => {
-        console.log("Initiator:fetch.catch",file); // DEBUG:
+        console.log("Initiator:fetch.catch",err); // DEBUG:
         console.log(err); // DEBUG:
         throw err;
       }); // End fetch.catch
@@ -325,7 +326,7 @@ function initiator() {
         break;
       default:
         console.log("Default"); // DEBUG:
-        $("#alertMsg").addClass("alert alert-danger").html(err).fadeIn('fast');
+        $("#alertMsg").addClass("alert alert-danger").html("Server error. Please try again later.").fadeIn('fast');
     } // End switch
   }); // Promise.all.catch
 } // End initiator
