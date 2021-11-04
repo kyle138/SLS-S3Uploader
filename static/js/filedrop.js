@@ -257,16 +257,6 @@ function initiator() {
   console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
   console.log(files); // DEBUG:
 
-
-  // let noNulls = files.reduce( (res,file) => {
-  //   console.log(file);  // DEBUG:
-  //   if (file != null) {
-  //     console.log(`File added: ${file}`); //// DEBUG:
-  //     res.push(file);
-  //   }
-  //   return res;
-  // },[]);
-
 //  trimNulls();
   files = trimNulls();
 
