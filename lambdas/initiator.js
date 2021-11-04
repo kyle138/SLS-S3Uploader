@@ -96,7 +96,7 @@ function validateFiletype(type) {
     } else {
       return res();
     }
-  })
+  });
 } // End validateFiletype
 
 // validateEmail()
