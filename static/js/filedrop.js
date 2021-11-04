@@ -389,6 +389,13 @@ function handleMultis(multis) {
       console.log('Promise2.Promise2.catch:',err);  // DEBUG:
     })
   })  // End Promise.all.then.then
+  .then(() => {
+    console.log('All good.'); // DEBUG:
+    //************** This is all going to change with list of QSAs *********************************
+    let s = (files.length > 1) ? 's are' : ' is';
+    $("#submitbtnwrpr").fadeOut();
+    $("#filesLbl").addClass("alert alert-success").html( `The upload${s} complete.` ).fadeIn('fast');
+  })  // End Promise.all.then.then.then
   .catch((err)=> {
     console.log('error: ',err);
   });
