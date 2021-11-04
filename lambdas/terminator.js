@@ -10,7 +10,6 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-// const termParams = {};
 
 // validateProvided()
 // Checks if provided data is a string of some length
@@ -102,19 +101,20 @@ module.exports.handler = async (event, context) => {
         "Parts": postObj.parts
       }
     };
-    // termParams.Bucket = process.env.S3BUCKET;
-    // termParams.Key = postObj.key;
-    // termParams.UploadId = postObj.uploadid;
-    // termParams.MultipartUpload = {
-    //   Parts: postObj.parts
-    // };
     console.log("termParams:"+JSON.stringify(termParams,null,2)); // DEBUG:
     return await S3.completeMultipartUpload(termParams).promise();
   })  // Multipart Upload completed
   .then(async (termResp) => {
     console.log('completeMultipartUpload response:'+JSON.stringify(termResp,null,2));  // DEBUG:
     // ********** Return QSA for bucket/key *****************
-    return await createResponseObject("200", "Upload Complete");
+    return await S3.getSignedUrlPromise(
+      'getObject',
+      {
+        "Bucket": process.env.S3BUCKET,
+        "Key": postObj.key
+      }
+    );
+    // return await createResponseObject("200", "Upload Complete");
   })  // End Promise.all.then.then
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
