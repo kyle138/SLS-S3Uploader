@@ -10,7 +10,7 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-const termParams = {};
+// const termParams = {};
 
 // validateProvided()
 // Checks if provided data is a string of some length
@@ -93,20 +93,29 @@ module.exports.handler = async (event, context) => {
     validateProvided(postObj.uploadid),
     validateProvided(postObj.parts)
   ])  // posted values validated...
-  .then(async () => { // set multiParams
-    termParams.Bucket = process.env.S3BUCKET;
-    termParams.Key = postObj.key;
-    termParams.UploadId = postObj.uploadid;
-    termParams.MultipartUpload = {
-      Parts: postObj.parts
+  .then(async () => { // set termParams
+    let termParams = {
+      "Bucket": process.env.S3BUCKET,
+      "Key": postObj.key,
+      "UploadId": postObj.uploadid,
+      "MultipartUpload": {
+        "Parts": postObj.parts
+      }
     };
+    // termParams.Bucket = process.env.S3BUCKET;
+    // termParams.Key = postObj.key;
+    // termParams.UploadId = postObj.uploadid;
+    // termParams.MultipartUpload = {
+    //   Parts: postObj.parts
+    // };
     console.log("termParams:"+JSON.stringify(termParams,null,2)); // DEBUG:
     return await S3.completeMultipartUpload(termParams).promise();
-  })  // multiParams are set...
-  .then(async (termResp) => { // create Multipart upload
+  })  // Multipart Upload completed
+  .then(async (termResp) => {
     console.log('completeMultipartUpload response:'+JSON.stringify(termResp,null,2));  // DEBUG:
+    // ********** Return QSA for bucket/key *****************
     return await createResponseObject("200", "Upload Complete");
-  })  // multiResp created
+  })  // End Promise.all.then.then
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
     return await createResponseObject("400", err.toString());
