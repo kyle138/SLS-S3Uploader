@@ -86,6 +86,9 @@ module.exports.handler = async (event, context) => {
     return await createResponseObject("400","Internal error. Please contact admin.");
   }
 
+  // Check if EXPDN has been set as an environment variable.
+  const expdn = process.env.hasOwnProperty('EXPDN') ? process.env.EXPDN : 7200;
+
   // Check for required fields in postObj
   return await Promise.all([
     validateProvided(postObj.key),
@@ -110,7 +113,8 @@ module.exports.handler = async (event, context) => {
       'getObject',
       {
         "Bucket": process.env.S3BUCKET,
-        "Key": postObj.key
+        "Key": postObj.key,
+        "Expires": expdn
       }
     );
   })  // End Promise.all.then.then

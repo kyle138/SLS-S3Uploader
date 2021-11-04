@@ -373,14 +373,15 @@ function handleMultis(multis) {
       puttedMultis.map( async (pMu) => {
         pMu.Resp = await terminator(pMu.multiObj);
         console.log(`pMu.Resp:`,pMu.Resp);  // DEBUG:
+        return await terminator(pMu.multiObj);
       })  // End map
     ) // End Promise.all inside a Promise.all
     .catch((err) => {
       console.log('Promise2.Promise2.catch:',err);  // DEBUG:
     })
   })  // End Promise.all.then.then
-  .then(() => {
-    console.log('All good.'); // DEBUG:
+  .then((tResp) => {
+    console.log(`handleMultis:Promise.all.then.then.then: tREsp: ${tResp}`); // DEBUG:
     //************** This is all going to change with list of QSAs *********************************
     let s = (files.length > 1) ? 's are' : ' is';
     $("#submitbtnwrpr").fadeOut();

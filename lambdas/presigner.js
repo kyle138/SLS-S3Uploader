@@ -58,6 +58,9 @@ module.exports.handler = async (event, context) => {
     return await createResponseObject("400","Internal error. Please contact admin.");
   }
 
+  // Check if EXPUP has been set as an environment variable.
+  const expup = process.env.hasOwnProperty('EXPUP') ? process.env.EXPUP : 7200;
+
   // Check for required fields in postObj
   return await Promise.all([
     validateProvided(postObj.uploadid),
@@ -69,8 +72,9 @@ module.exports.handler = async (event, context) => {
     partParams.Key = postObj.key;
     partParams.UploadId = postObj.uploadid;
     partParams.PartNumber = postObj.partnumber;
+    partParams.Expires = expup;
     console.log("partParams:"+JSON.stringify(partParams,null,2)); // DEBUG:
-    // partParams are set 
+    // partParams are set
     return await S3.getSignedUrlPromise(
       'uploadPart',
       partParams

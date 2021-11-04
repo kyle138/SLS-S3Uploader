@@ -63,6 +63,8 @@ functions:
   presigner:
     handler: lambdas/presigner.handler
     description: "triggered by APIG, returns presigned URLs for putPart anonymous upload to S3 bucket."
+    environment:
+      EXPDN: ${self:custom.s3config.expdn}
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
@@ -71,6 +73,8 @@ functions:
   terminator:
     handler: lambdas/terminator.handler
     description: "triggered by APIG, Completes the multipart upload."
+    environment:
+      EXPUP: ${self:custom.s3config.expup}
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
