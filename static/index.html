@@ -11,7 +11,9 @@
 
   </head>
   <body>
-
+    <div class="jumbotron text-center">
+      <h1>Uploader</h1>
+    </div>
     <form class="form-horizontal" id="uploadForm" novalidate>
       <div class="form-group row form-row" id="row-email">
         <label class="col-form-label col-sm-3" for="email">Enter a valid email address</label>
@@ -60,20 +62,32 @@
       </div>
     </form>
 
-    <div class="collapse" id="row-success">
-        <div class="alert alert-success">
-          <p>
-            The upload has completed successfully and is available for download using the provided links.
-          </p>
-          <p>
-            *Links expire after 7 days.
-          </p>
+    <div class="collapse" id="success">
+      <div class="row mb-3">
+        <div class="col-sm-12 text-center">
+          <h2 id="successMsg"></h2>
         </div>
-        <label class="col-form-label col-sm-3" for="successElem" id="successLbl"></label>
+      </div>
+      <div class="row mb-3">
+        <div class="col-sm-3">
+          <label for="successList" id="successListLbl"></label>
+        </div>
         <div class="col-sm-9">
-          <div class="container-fluid filesList" id="successList"></div>
+          <div class="container-fluid" id="successList"></div>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-sm-3">
+          <label for="qsaArea" id="qsaAreaLbl"></label>
+        </div>
+        <div class="col-sm-9">
           <div class="container-fluid QSAlist" id="qsaArea"></div>
         </div>
+      </div>
+      <div class="row container-fluid alert alert-info">
+          <span class="fas fa-info-circle"></span>&nbsp;
+          Links expire after 7 days.
+      </div>
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

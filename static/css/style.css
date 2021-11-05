@@ -34,8 +34,11 @@
 #fileElem {
   display:none;
 }
-#uploadForm {
+#uploadForm, #success {
   margin: 40px;
   padding: 20px;
   border: 1px solid #c7c7c7;
+}
+#qsaArea textarea {
+  white-space: pre;
 }

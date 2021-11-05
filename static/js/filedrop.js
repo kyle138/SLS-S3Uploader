@@ -11,6 +11,9 @@ var files=[],
 // Process values in email field
 $("#email").change(() => {
   validateEml();
+});
+$("#emailchk").click(() => {
+  validateEml();
 }); // End email validator
 
 // Intercept enter key in the email field
@@ -388,8 +391,6 @@ function handleMultis() {
     files = data;
     $("#uploadForm").hide();
     success();
-    //************** This is all going to change with list of QSAs *********************************
-    $("#filesLbl").addClass("alert alert-success").html( `The upload${s} complete.` ).fadeIn('fast');
   })  // End Promise.all.then.then.then
   .catch((err)=> {
     console.log('error: ',err);
@@ -506,6 +507,8 @@ async function terminator(obj) {
   }); // End fetch.catch
 }
 
+// success
+// Displays success message and QSAs for uploaded files.
 function success() {
   console.log("success::"); // DEBUG:
   console.log(files); // DEBUG:
@@ -517,23 +520,39 @@ function success() {
   ) // End Promise.all
   .then((qsas) => {
     console.log('succ:Promise.all.then',qsas);  // DEBUG:
-    $("#qsaArea").append(`
+    let qsaarea = $(`
       <div class="input-group">
-      <span class="input-group-text">Copy to clipboard</span>
-      <textarea class="form-control" area-label="Copy to clips">${qsas.join('&#10;')}</textarea>
+      <div class="input-group-prepend">
+      <button type="button" class="btn btn-primary" id="copyQSAs">Copy to Clipboard</button>
+      </div>
+      <textarea class="form-control" id="QSAsTA" aria-label="Copy to clips" rows="4" readonly>${qsas.join('&#10;')}</textarea>
       </div>
     `);
+
+    // Copy to clipboard
+    // Copies list of QSAs from textarea to clipboard
+    $("#copyQSAs",qsaarea).on("click", () => {
+      console.log('Copy to Clipboard'); // DEBUG:
+      $("#QSAsTA").select();
+      document.execCommand('copy');
+    }); // End Copy to clipboard
+
+    $("#qsaArea").append(qsaarea);
+
   })  // End Promise.all.then
   .then(() => {
-    $("#row-success").fadeIn('fast');
-
+    let s = (files.length > 1) ? 's have': ' has';
+    $("#successMsg").html(`The upload${s} completed successfully.`);
+    s = (files.length > 1) ? 's' : '';
+    $("#successListLbl").html(`You can download the file${s} using the provided link${s}.`);
+    $("#qsaAreaLbl").html(`Alternatively, you can copy the link${s} to your clipboard.`);
+    $("#success").fadeIn('fast');
   })  // End Promise.all.then.then
   .catch((err) => {
     console.log('succ:Promise.all.catch',err);  // DEBUG:
   }); // End Promise.all.catch
 
-
-}
+} // End success
 
 function succ(file) {
   return new Promise((res) => {
@@ -550,6 +569,6 @@ function succ(file) {
     `);
     $("#successList").append(filesucc);
     console.log('succ:file.QSA:',file.QSA); // DEBUG:
-    return res(file.QSA+'&#10;');
+    return res(file.QSA);
   }); // End Promise
 } // End succ
