@@ -156,7 +156,7 @@ function handleFiles(fls) {
 } // End handleFiles
 
 // handleFile()
-// Add file progress row to filesMsg div
+// Add file progress row to filesList div
 // @params {file} file - The file selected for upload
 function handleFile(file) {
   console.log("handleFile");  // DEBUG:
@@ -191,7 +191,7 @@ function handleFile(file) {
         </div>
         <div class="col-sm-8 s3u-progress">
           <div class="progress">
-            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
+            <div class="progress-bar progress-bar-striped active" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
               <span class="sr-only">0%</span>
             </div>
           </div>
@@ -206,7 +206,7 @@ function handleFile(file) {
       checkStatus();
     });
 
-    $("#filesMsg").append(fileprog);
+    $("#filesList").append(fileprog);
   }
 } // End handleFile
 
@@ -288,6 +288,9 @@ function initiator() {
         console.log(data); // DEBUG:
         file.multiObj.Key = data.Key;
         file.multiObj.UploadId = data.UploadId;
+        // Start the progress bar
+        $('#filesList').find(`#pb${file.fidx}`).attr("aria-valuenow", '5%');
+        $('#filesList').find(`#pb${file.fidx}`).css("width", '5%');
         return file;
       })  // End fetch.then.then
       .catch((err) => {
@@ -300,8 +303,6 @@ function initiator() {
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
-    console.log(data[0].fileObj.name); // DEBUG:
-    files = data;
     handleMultis();
   })  // Promise.all.then
   .catch((err) => {
