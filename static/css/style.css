@@ -1,3 +1,7 @@
+.jumbotron {
+  background-color: #024;
+  color: #c7c7c7;
+}
 #droparea {
   border: 3px dashed #024;
   border-radius: 18px;
