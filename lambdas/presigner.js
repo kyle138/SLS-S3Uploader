@@ -70,13 +70,13 @@ module.exports.handler = async (event, context) => {
   .then(() => {
     let params = [];
     for(let i = 1; i <= postObj.numparts; i++) {
-      params[i] = {
+      params.push({
         "Bucket": process.env.S3BUCKET,
         "Key": postObj.key,
         "UploadId": postObj.uploadid,
         "PartNumber": i,
         "Expires": expup
-      };
+      });
     } // End for
     return params;
   })  // partParams are set
@@ -96,7 +96,7 @@ module.exports.handler = async (event, context) => {
           )
         };  // End return
       })  // End map
-    ) // End Promise.all
+    ); // End Promise.all
     // .then((psUs) => {
     //
     // })
