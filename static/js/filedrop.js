@@ -351,20 +351,12 @@ function handleMultis() {
   console.log("handleMultis",files);
   Promise.all(
     files.map( async (multi) => {
-      // Get presignedUrl for each part
-      let psUs = [];
-      for (let i = 1; i <= multi.multiObj.parts.num; i++) {
-        let psu = await getPresignedUrl({
-          "key": multi.multiObj.Key,
-          "uploadid": multi.multiObj.UploadId,
-          "partnumber": i
-        });
-        psUs.push({
-          "partnumber": i,
-          "psu": psu
-        });
-      }
-      multi.multiObj.psUs = psUs;
+      multi.multiObj.psUs = await getPresignedUrl({
+        "key": multi.multiObj.Key,
+        "uploadid": multi.multiObj.UploadId,
+        "numparts": multi.multiObj.parts.num
+      });
+      console.log("multiObj.psUs:",multi.multiObj.psUs);  // DEBUG:
       thatsProgress(multi.fidx, 10);  // set progress at 10%
       return multi;
     }) // End map
@@ -427,7 +419,7 @@ async function getPresignedUrl(part) {
   .then(async (res) => {
     console.log('getPresignedUrl:fetch.then',res); // DEBUG:
     if(res.ok) {
-      return await res.text();
+      return await res.json();
     } else {
       // If the APIG response isn't 200, parse the response and throw it.
       let reserr=await res.json();
