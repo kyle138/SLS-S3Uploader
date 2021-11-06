@@ -251,25 +251,25 @@ function thatsProgress(fidx, pcnt) {
     $('#filesList').find(`#pb${fidx}`).removeClass('progress-bar-striped progress-bar-animated').addClass('bg-success');
   }
   $('#filesList').find(`#pb${fidx}`).css("width", `${pcnt}%`).attr("aria-valuenow", `${pcnt}%`);
+  $('#filesList').find(`#pb${fidx}`).find('.sr-only').html(`${pcnt}%`);
 } // End thatsProgress
 
 // initiator
 // Initiate the upload process for each file in files[];
 function initiator() {
   console.log("Initiator");
-
-  // reset any existing alerts.
-  $("#alertMsg").hide().html("");
-
+  // Settings for to fetch
   let url = APIG+'/initiate';
   let initData = {
     "email": eml.email,
     "industry": $("#industryElem").val()
   };
 
+  // reset any existing alerts.
+  $("#alertMsg").hide().html("");
+  // reset files array
   files = trimNulls();
-  console.log(files); // DEBUG:
-
+  // Initiate multipart upload for all files
   Promise.all(
     files.map( async (file) => {
       initData.filename = file.fileObj.name;
@@ -363,7 +363,6 @@ function handleMultis() {
     files = data;
     return await Promise.all(
       files.map( async (sMu) => {
-        // sMu.multiObj.ETags = await putParts(sMu);
         sMu.result = await putParts(sMu);
         console.log(`handleMultis:Promise.all.then signedMultis.map: sMu:`,sMu);  // DEBUG:
         return sMu.result;
@@ -372,23 +371,17 @@ function handleMultis() {
     .catch((err) => {
       console.log('Promise.Promise.catch:',err);  // DEBUG:
       // ********** DO SOMETHING HERE??? ********************
-    })
+    }); // End Promise.all.Promise.all.catch
   })  // End Promise.all.then
-  .then(async (data) => {
-    // ************** This is kinda of ugly now ************************
-    console.log(`handleMultis:Promise.all.then.then: puttedMultis:`,data);  // DEBUG:
-    files = data;
-    return files;
-  })  // End Promise.all.then.then
   .then((data) => {
-    console.log(`handleMultis:Promise.all.then.then.then: terminatedMultis:`,data); // DEBUG:
+    console.log(`handleMultis:Promise.all.then.then terminatedMultis:`,data); // DEBUG:
     files = data;
     $("#uploadForm").hide();
     success();
-  })  // End Promise.all.then.then.then
+  })  // End Promise.all.then.then
   .catch((err)=> {
     console.log('error: ',err);
-  });
+  }); // End Promise.all.catch
 } // End handleMultis
 
 // getPresignedUrl
@@ -430,20 +423,22 @@ async function getPresignedUrl(part) {
 function putParts(file) {
   return new Promise(async (res, rej) => {
     console.log('putParts:file ',file);
+
+    // If the psUs aren't a valid array it causes an infinite loop
     if(typeof file.multiObj.psUs.length !== 'number') {
       return rej(new Error('putParts error.'));
     }
-    // let etags = [];
+
     let reader = new FileReader(),
         pcnt = 85 / file.multiObj.parts.num;
     file.multiObj.ETags = [];
 
     for( let i = 0; i < file.multiObj.psUs.length; i++ ) {
       let start = i * file.multiObj.parts.size,
-      end = (i+1) * file.multiObj.parts.size,
-      chunk = (i+1) < file.multiObj.parts.num
-      ? file.fileObj.slice(start, end)
-      : file.fileObj.slice(start);
+          end = (i+1) * file.multiObj.parts.size,
+          chunk = (i+1) < file.multiObj.parts.num
+                ? file.fileObj.slice(start, end)
+                : file.fileObj.slice(start);
       // Use fetch to PUT each chunk to its assigned psUrl
       let etag = await fetch(file.multiObj.psUs[i].psu, {
         method: 'PUT',
@@ -476,7 +471,6 @@ function putParts(file) {
     file.QSA = await terminator(file.multiObj);
     thatsProgress(file.fidx, 100);  // Set progressbar at 100%
     return res(file);
-    // return res(etags);
   }); // End Promise
 } // End putParts
 
@@ -536,7 +530,6 @@ function success() {
       <textarea class="form-control" id="QSAsTA" aria-label="Copy to clips" rows="4" readonly>${qsas.join('&#10;')}</textarea>
       </div>
     `);
-
     // Copy to clipboard
     // Copies list of QSAs from textarea to clipboard
     $("#copyQSAs",qsaarea).on("click", () => {
@@ -544,9 +537,8 @@ function success() {
       $("#QSAsTA").select();
       document.execCommand('copy');
     }); // End Copy to clipboard
-
+    // Add it to the page
     $("#qsaArea").append(qsaarea);
-
   })  // End Promise.all.then
   .then(() => {
     let s = (files.length > 1) ? 's have': ' has';
@@ -562,6 +554,8 @@ function success() {
 
 } // End success
 
+// succ
+// Build file link specified file
 function succ(file) {
   return new Promise((res) => {
     console.log('succ:file: ',file);  // DEBUG:
