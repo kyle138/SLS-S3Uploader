@@ -10,9 +10,9 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-const partParams = {
-  Expires: 300
-};
+// const partParams = {
+//   Expires: 300
+// };
 
 // validateProvided()
 // Checks if provided data is a string or number of some length or value
@@ -65,21 +65,42 @@ module.exports.handler = async (event, context) => {
   return await Promise.all([
     validateProvided(postObj.uploadid),
     validateProvided(postObj.key),
-    validateProvided(Number(postObj.partnumber))
+    validateProvided(Number(postObj.numparts))
   ])  // posted values validated...
-  .then(async () => {
-    partParams.Bucket = process.env.S3BUCKET;
-    partParams.Key = postObj.key;
-    partParams.UploadId = postObj.uploadid;
-    partParams.PartNumber = postObj.partnumber;
-    partParams.Expires = expup;
-    console.log("partParams:"+JSON.stringify(partParams,null,2)); // DEBUG:
-    // partParams are set
-    return await S3.getSignedUrlPromise(
-      'uploadPart',
-      partParams
-    );
-  })  // Signed URL returned...
+  .then(() => {
+    let params = [];
+    for(let i = 1; i <= postObj.numparts; i++) {
+      params[i] = {
+        "Bucket": process.env.S3BUCKET,
+        "Key": postObj.key,
+        "UploadId": postObj.uploadid,
+        "PartNumber": i,
+        "Expires": expup
+      };
+    } // End for
+    return params;
+  })  // partParams are set
+  .then((params) => {
+    return Promise.all(
+      params.map( async (param) => {
+        // let psu = await S3.getSignedUrlPromise(
+        //   'uploadPart',
+        //   param
+        // );
+        console.log("param:"+JSON.stringify(param,null,2)); // DEBUG:
+        return {
+          "partnumber": param.PartNumber,
+          "psu": await S3.getSignedUrlPromise(
+            'uploadPart',
+            param
+          )
+        };  // End return
+      })  // End map
+    ) // End Promise.all
+    // .then((psUs) => {
+    //
+    // })
+  })
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
     return await createResponseObject("400", err.toString());
