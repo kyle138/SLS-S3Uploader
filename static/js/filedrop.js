@@ -191,7 +191,7 @@ function handleFile(file) {
         </div>
         <div class="col-sm-8 s3u-progress">
           <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'>
               <span class="sr-only">0%</span>
             </div>
           </div>
@@ -248,10 +248,9 @@ function trimNulls() {
 // Update the specified progress bar
 function thatsProgress(fidx, pcnt) {
   if(pcnt == 100) {
-    $('#filesList').find(`#pb${fidx}`).addClass('bgSuccess');
+    $('#filesList').find(`#pb${fidx}`).removeClass('progress-bar-striped progress-bar-animated').addClass('bg-success');
   }
-  $('#filesList').find(`#pb${fidx}`).attr("aria-valuenow", `${pcnt}%`);
-  $('#filesList').find(`#pb${fidx}`).css("width", `${pcnt}%`);
+  $('#filesList').find(`#pb${fidx}`).css("width", `${pcnt}%`).attr("aria-valuenow", `${pcnt}%`);
 } // End thatsProgress
 
 // initiator
@@ -267,8 +266,6 @@ function initiator() {
     "email": eml.email,
     "industry": $("#industryElem").val()
   };
-  console.log(`initData: `+JSON.stringify(initData,null,2));  // DEBUG:
-  console.log(files); // DEBUG:
 
   files = trimNulls();
   console.log(files); // DEBUG:
@@ -366,9 +363,10 @@ function handleMultis() {
     files = data;
     return await Promise.all(
       files.map( async (sMu) => {
-        sMu.multiObj.ETags = await putParts(sMu);
+        // sMu.multiObj.ETags = await putParts(sMu);
+        sMu.result = await putParts(sMu);
         console.log(`handleMultis:Promise.all.then signedMultis.map: sMu:`,sMu);  // DEBUG:
-        return sMu;
+        return sMu.result;
       })  // End map
     ) // End Promise.all inside a Promise.all
     .catch((err) => {
@@ -377,20 +375,10 @@ function handleMultis() {
     })
   })  // End Promise.all.then
   .then(async (data) => {
+    // ************** This is kinda of ugly now ************************
     console.log(`handleMultis:Promise.all.then.then: puttedMultis:`,data);  // DEBUG:
     files = data;
-    return await Promise.all(
-      files.map( async (pMu) => {
-        pMu.QSA = await terminator(pMu.multiObj);
-        console.log(`pMu.QSA:`,pMu.QSA);  // DEBUG:
-        // set progress bar at 100%
-        thatsProgress(pMu.fidx, 100);
-        return pMu;
-      })  // End map
-    ) // End Promise.all inside a Promise.all
-    .catch((err) => {
-      console.log('Promise2.Promise2.catch:',err);  // DEBUG:
-    })
+    return files;
   })  // End Promise.all.then.then
   .then((data) => {
     console.log(`handleMultis:Promise.all.then.then.then: terminatedMultis:`,data); // DEBUG:
@@ -439,46 +427,57 @@ async function getPresignedUrl(part) {
 
 // putParts
 // For every part of a multi call putPart
-async function putParts(file) {
-  console.log('putParts:file ',file);
-  let etags = [],
-      reader = new FileReader(),
-      pcnt = 85 / file.multiObj.parts.num;
+function putParts(file) {
+  return new Promise(async (res, rej) => {
+    console.log('putParts:file ',file);
+    if(typeof file.multiObj.psUs.length !== 'number') {
+      return rej(new Error('putParts error.'));
+    }
+    // let etags = [];
+    let reader = new FileReader(),
+        pcnt = 85 / file.multiObj.parts.num;
+    file.multiObj.ETags = [];
 
-  for( let i = 0; i < file.multiObj.psUs.length; i++ ) {
-    let start = i * file.multiObj.parts.size,
-        end = (i+1) * file.multiObj.parts.size,
-        chunk = (i+1) < file.multiObj.parts.num
-              ? file.fileObj.slice(start, end)
-              : file.fileObj.slice(start);
-    // Use fetch to PUT each chunk to its assigned psUrl
-    let etag = await fetch(file.multiObj.psUs[i].psu, {
-      method: 'PUT',
-      body: chunk
-    })  // End fetch
-    .then(async (res) => {
-      console.log(`putParts:for[${i}]:fetch.then res`,res); // DEBUG:
-      if(res.ok) {
-        console.log(`putParts:for[${i}]:fetch.then ok resHeaders: `,res.headers.get('ETag'));  // DEBUG:
-        // set progress bar at pcnt * i+1 + 10 (max of 95%);
-        thatsProgress(file.fidx, pcnt*(i+1)+10);
-        return await res.headers.get('ETag');
-      } else {
-        let reserr = await res.json();
-        console.log('res.ok, NOT!',reserr); // DEBUG:
-        throw reserr.response;
-      }
-    })  // End fetch.then
-    .catch((err) => {
-      console.log(`putParts:for[${i}]:fetch.catch err`,err);  // DEBUG:
-    });  // End fetch.catch
-    console.log(`etag: ${etag}`); // DEBUG:
-    etags.push({
-      "ETag": etag,
-      "PartNumber": (i+1)
-    });
-  } // End for loop
-  return etags;
+    for( let i = 0; i < file.multiObj.psUs.length; i++ ) {
+      let start = i * file.multiObj.parts.size,
+      end = (i+1) * file.multiObj.parts.size,
+      chunk = (i+1) < file.multiObj.parts.num
+      ? file.fileObj.slice(start, end)
+      : file.fileObj.slice(start);
+      // Use fetch to PUT each chunk to its assigned psUrl
+      let etag = await fetch(file.multiObj.psUs[i].psu, {
+        method: 'PUT',
+        body: chunk
+      })  // End fetch
+      .then(async (resp) => {
+        console.log(`putParts:for[${i}]:fetch.then resp`,resp); // DEBUG:
+        if(resp.ok) {
+          console.log(`putParts:for[${i}]:fetch.then ok resHeaders: `,resp.headers.get('ETag'));  // DEBUG:
+          // set progress bar at pcnt * i+1 + 10 (max of 95%);
+          thatsProgress(file.fidx, pcnt*(i+1)+10);
+          return await resp.headers.get('ETag');
+        } else {
+          let resperr = await resp.json();
+          console.log('resp.ok, NOT!',resperr); // DEBUG:
+          throw resperr.response;
+        }
+      })  // End fetch.then
+      .catch((err) => {
+        console.log(`putParts:for[${i}]:fetch.catch err`,err);  // DEBUG:
+        // *************** Need to retry failed parts ******************
+      });  // End fetch.catch
+      console.log(`etag: ${etag}`); // DEBUG:
+      // Save each ETag to the multiObj
+      file.multiObj.ETags.push({
+        "ETag": etag,
+        "PartNumber": (i+1)
+      });
+    } // End for loop
+    file.QSA = await terminator(file.multiObj);
+    thatsProgress(file.fidx, 100);  // Set progressbar at 100%
+    return res(file);
+    // return res(etags);
+  }); // End Promise
 } // End putParts
 
 // terminator
