@@ -191,7 +191,7 @@ function handleFile(file) {
         </div>
         <div class="col-sm-8 s3u-progress">
           <div class="progress">
-            <div class="progress-bar progress-bar-striped active" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='${file.size}'>
               <span class="sr-only">0%</span>
             </div>
           </div>
@@ -242,7 +242,17 @@ function trimNulls() {
     }
     return res;
   },[]);
-}     // End trimNulls
+}  // End trimNulls
+
+// thatsProgress
+// Update the specified progress bar
+function thatsProgress(fidx, pcnt) {
+  if(pcnt == 100) {
+    $('#filesList').find(`#pb${fidx}`).addClass('bgSuccess');
+  }
+  $('#filesList').find(`#pb${fidx}`).attr("aria-valuenow", `${pcnt}%`);
+  $('#filesList').find(`#pb${fidx}`).css("width", `${pcnt}%`);
+} // End thatsProgress
 
 // initiator
 // Initiate the upload process for each file in files[];
@@ -288,9 +298,8 @@ function initiator() {
         console.log(data); // DEBUG:
         file.multiObj.Key = data.Key;
         file.multiObj.UploadId = data.UploadId;
-        // Start the progress bar
-        $('#filesList').find(`#pb${file.fidx}`).attr("aria-valuenow", '5%');
-        $('#filesList').find(`#pb${file.fidx}`).css("width", '5%');
+        // Start the progress bar at 5%
+        thatsProgress(file.fidx, 5);
         return file;
       })  // End fetch.then.then
       .catch((err) => {
@@ -356,6 +365,7 @@ function handleMultis() {
         });
       }
       multi.multiObj.psUs = psUs;
+      thatsProgress(multi.fidx, 10);  // set progress at 10%
       return multi;
     }) // End map
   ) // End Promise.all
@@ -371,6 +381,7 @@ function handleMultis() {
     ) // End Promise.all inside a Promise.all
     .catch((err) => {
       console.log('Promise.Promise.catch:',err);  // DEBUG:
+      // ********** DO SOMETHING HERE??? ********************
     })
   })  // End Promise.all.then
   .then(async (data) => {
@@ -380,6 +391,8 @@ function handleMultis() {
       files.map( async (pMu) => {
         pMu.QSA = await terminator(pMu.multiObj);
         console.log(`pMu.QSA:`,pMu.QSA);  // DEBUG:
+        // set progress bar at 100%
+        thatsProgress(pMu.fidx, 100);
         return pMu;
       })  // End map
     ) // End Promise.all inside a Promise.all
@@ -437,7 +450,8 @@ async function getPresignedUrl(part) {
 async function putParts(file) {
   console.log('putParts:file ',file);
   let etags = [],
-      reader = new FileReader();
+      reader = new FileReader(),
+      pcnt = 85 / file.multiObj.parts.num;
 
   for( let i = 0; i < file.multiObj.psUs.length; i++ ) {
     let start = i * file.multiObj.parts.size,
@@ -454,6 +468,8 @@ async function putParts(file) {
       console.log(`putParts:for[${i}]:fetch.then res`,res); // DEBUG:
       if(res.ok) {
         console.log(`putParts:for[${i}]:fetch.then ok resHeaders: `,res.headers.get('ETag'));  // DEBUG:
+        // set progress bar at pcnt * i+1 + 10 (max of 95%);
+        thatsProgress(file.fidx, pcnt*(i+1)+10);
         return await res.headers.get('ETag');
       } else {
         let reserr = await res.json();
