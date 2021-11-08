@@ -1,14 +1,16 @@
 'use strict';
 
+// Initialize some constants
 const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
       minPartSize = 5 * 1024 * 1024, // 5MB
       maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
       maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
+// Initialize holders for files array and eml object.
 var files=[],
     eml = {"valid": false};
 
-// Process values in email field
+// Process values in email field when user exits the field or clicks [Check]
 $("#email").change(() => {
   validateEml();
 });
@@ -48,47 +50,6 @@ $("#submitbtn").click(() => {
     initiator();
   }
 }); // End submit button
-
-// validateEml
-// Very basic regex of email provided.
-// Must contain a @ and . with some other chars.
-// Email will be further validated by Initiator lambda.
-function validateEml(mxpass=true) {
-  console.log(`mxpass: ${mxpass}`); // DEBUG:
-  eml.email = $("#email").val();
-  if((eml.email.length > 0 && !/^.+@.+\..+$/g.test(eml.email)) || !mxpass) {
-    eml.valid = false;
-    let emailMsg = mxpass ? "You must enter a valid email address." : "Try a different email address. The one you entered cannot be verified.";
-    console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
-    checkStatus();
-    $("#row-files").fadeOut();
-    $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
-    $("#email").tooltip({
-      "container": "body",
-      "html": true,
-      "placement": "top",
-      "title": "Please enter a valid email address."
-    });
-  } else {
-    eml.valid = true;
-    console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
-    checkStatus();
-    $("#alertMsg").html("");
-    $("#alertMsg").removeClass("alert alert-danger");
-    $("#row-files").fadeIn();
-  }
-} // End validateEml
-
-// reckonParts
-// Returns the number and size of parts needed for multipart upload
-function reckonParts(filesize) {
-  let parts = {};
-  parts.size = (filesize / maxParts) < minPartSize
-             ? minPartSize
-             : Math.ceil(filesize / maxParts);
-  parts.num = Math.ceil(filesize / parts.size);
-  return parts;
-}
 
 // dropArea
 // defines area for drag and drop file uploads
@@ -232,7 +193,7 @@ function checkStatus() {
 
 // trimNulls
 // Files removed from the upload list leave nulls in the files[] array,
-// Remove any nulls and reset the files[] array.
+// Remove any nulls and return sanitized array.
 function trimNulls() {
   return files.reduce( (res,file) => {
     console.log(file);  // DEBUG:
@@ -246,6 +207,8 @@ function trimNulls() {
 
 // thatsProgress
 // Update the specified progress bar
+// @param {int} fidx - The file index value of the progress bar to update
+// @param {number} pcnt - The percentage value to set the progres bar to
 function thatsProgress(fidx, pcnt) {
   if(pcnt == 100) {
     $('#filesList').find(`#pb${fidx}`).removeClass('progress-bar-striped progress-bar-animated').addClass('bg-success');
@@ -256,6 +219,7 @@ function thatsProgress(fidx, pcnt) {
 
 // initiator
 // Initiate the upload process for each file in files[];
+// Set Key and UploadId values for file, update progressbar to 5%
 function initiator() {
   console.log("Initiator");
   // Settings for to fetch
@@ -279,13 +243,11 @@ function initiator() {
         body: JSON.stringify(initData)
       })
       .then(async (res) => {
-        console.log(res); // DEBUG:
         if(res.ok) {
           return  await res.json();
         } else {
           // If the APIG response isn't 200, parse the response and throw it.
           let reserr=await res.json();
-          console.log(reserr);  // DEBUG:
           reserr = reserr.hasOwnProperty('response') ? reserr.response : reserr;
           throw reserr;
         }
@@ -314,6 +276,8 @@ function initiator() {
   .catch((err) => {
     console.log("Initiator:Promise.all.catch:err"); // DEBUG:
     console.log(err); // DEBUG:
+    // Initiator lambda can return errors based on invalid email or file name/type
+    // Different behaviors are called on the UI based upon the error type.
     switch (err) {
       case "Error: Invalid email domain.":
       case "Error: Invalid email format.":
@@ -343,7 +307,9 @@ function initiator() {
 // The initiator function begins a multipart upload for every file in the files[] array
 // It updates the elements of that array with:
 // UploadId, S3 object key, and the file object.
-// handleMultis handles uploading the parts of each multipart upload of each file in the file[] array.
+// handleMultis handles uploading the parts of each multipart upload of each file in the file[] array
+// by called getPresignedUrl for each part, then calling putParts for each part,
+// then calls success() after all uploads are completed successfully.
 function handleMultis() {
   console.log("handleMultis",files);
   Promise.all(
@@ -419,7 +385,9 @@ async function getPresignedUrl(part) {
 } // End getPresignedUrl
 
 // putParts
-// For every part of a multi call putPart
+// Calculates and slices file into parts for multipart upload
+// For each part, call fetch to PUT to presigned URL.
+// @param {file object} file - The file object to put
 function putParts(file) {
   return new Promise(async (res, rej) => {
     console.log('putParts:file ',file);
@@ -510,7 +478,8 @@ async function terminator(obj) {
 }
 
 // success
-// Displays success message and QSAs for uploaded files.
+// Displays success message and QSAs for uploaded files
+// To be called after all uploads have completed and we have QSA for each
 function success() {
   console.log("success::"); // DEBUG:
   console.log(files); // DEBUG:
@@ -530,7 +499,6 @@ function success() {
       <textarea class="form-control" id="QSAsTA" aria-label="Copy to clips" rows="4" readonly>${qsas.join('&#10;')}</textarea>
       </div>
     `);
-    // Copy to clipboard
     // Copies list of QSAs from textarea to clipboard
     $("#copyQSAs",qsaarea).on("click", () => {
       console.log('Copy to Clipboard'); // DEBUG:
@@ -555,7 +523,8 @@ function success() {
 } // End success
 
 // succ
-// Build file link specified file
+// Build file link for the specified file
+// @param {file object} file - The file object to succ
 function succ(file) {
   return new Promise((res) => {
     console.log('succ:file: ',file);  // DEBUG:
@@ -574,3 +543,47 @@ function succ(file) {
     return res(file.QSA);
   }); // End Promise
 } // End succ
+
+// validateEml
+// Very basic regex of email provided.
+// Must contain a @ and . with some other chars.
+// Email will be further validated by Initiator lambda.
+// @param {bool} mxpass - If Initiator lambda rejects email domain this
+//                        function is called again with mxpass set to false
+//                        Otherwise mxpass defaults to true
+function validateEml(mxpass=true) {
+  console.log(`mxpass: ${mxpass}`); // DEBUG:
+  eml.email = $("#email").val();
+  if(eml.email.length == 0 || !/^.+@.+\..+$/g.test(eml.email) || !mxpass) {
+    eml.valid = false;
+    let emailMsg = mxpass ? "You must enter a valid email address." : "Try a different email address. The one you entered cannot be verified.";
+    console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
+    checkStatus();
+    $("#row-files").fadeOut();
+    $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
+    $("#email").tooltip({
+      "container": "body",
+      "html": true,
+      "placement": "top",
+      "title": "Please enter a valid email address."
+    });
+  } else {
+    eml.valid = true;
+    console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
+    checkStatus();
+    $("#alertMsg").html("");
+    $("#alertMsg").removeClass("alert alert-danger");
+    $("#row-files").fadeIn();
+  }
+} // End validateEml
+
+// reckonParts
+// Returns the number and size of parts needed for multipart upload
+function reckonParts(filesize) {
+  let parts = {};
+  parts.size = (filesize / maxParts) < minPartSize
+  ? minPartSize
+  : Math.ceil(filesize / maxParts);
+  parts.num = Math.ceil(filesize / parts.size);
+  return parts;
+} // End reckonParts

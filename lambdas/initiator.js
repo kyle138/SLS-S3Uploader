@@ -88,7 +88,6 @@ function validateFilename(name) {
 
 // validateFiletype()
 // Checks if filetype is an accepted MIME type
-// *********************** finish this function ******************
 function validateFiletype(type) {
   return new Promise((res, rej) => {
     if (mimetypes.indexOf(type) == -1) {
