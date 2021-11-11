@@ -58,7 +58,7 @@
           </div>
           <div class="col-sm-2">&nbsp;</div>
           <div class="col-sm-3 btn-wrapper text-center">
-            <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" data-toggle="tooltip" title="Cancel all uploads and reset form." onclick="resetform()">Cancel</button>
+            <button type="button" class="btn btn-outline-secondary btn-lg" id="cancelbtn" data-toggle="tooltip" title="Cancel all uploads and reset form.">Cancel</button>
           </div>
           <div class="col-sm-2"></div>
         </div>
@@ -90,6 +90,19 @@
       <div class="row container-fluid alert alert-info">
           <span class="fas fa-info-circle"></span>&nbsp;
           Links expire after 7 days.
+      </div>
+    </div>
+
+    <div class="collapse" id="cancel">
+      <div class="row mb-3">
+        <div class="col-sm-12 text-center">
+          <h2 id="cancelMsg"></h2>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-sm-12 text-center">
+          <button type="button" class="btn btn-primary btn-lg disabled" id="resetbtn" data-toggle="tooltip" title="Reset form.">Reset</button>
+        </div>
       </div>
     </div>
 

@@ -80,6 +80,14 @@ functions:
       - {Ref: CommonModulesLambdaLayer}
     events:
       - httpApi: 'POST /post/terminate'
+  cancelator:
+    handler: lambdas/cancelator.handler
+    description: "triggered by APIG, Aborts the multipart upload."
+    timeout: 28
+    layers:
+      - {Ref: CommonModulesLambdaLayer}
+    events:
+      - httpApi: 'POST /post/cancelate'
 #      - s3: ${env:BUCKET}
 
 # you can add CloudFormation resource templates here

@@ -8,7 +8,9 @@ const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
 // Initialize holders for files array and eml object.
 var files=[],
-    eml = {"valid": false};
+    eml = {"valid": false},
+    // set cancelLvl to 0 initially.
+    cancelLvl = 0;
 
 // Process values in email field when user exits the field or clicks [Check]
 $("#email").change(() => {
@@ -41,7 +43,7 @@ $("#fileElem").change((e) => {
 $("#submitbtn").click(() => {
   if( checkStatus() ) {
     // Disable the [Submit] button
-    $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled')
+    $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     // Hide the droparea and change the label text.
     let s = (files.length > 1) ? 's are': ' is';
     $("#droparea").fadeOut();
@@ -50,6 +52,34 @@ $("#submitbtn").click(() => {
     initiator();
   }
 }); // End submit button
+
+// cancel button
+// Intercept cancel button clicks
+// Different behaviors are performed on [Cancel] clicks based on the
+// current state of the form and whether any uploads are currently in progress.
+// cancelLvl 0: No multiparts have been initiated, simply reload form.
+// cancelLvl 1: At least one multipart upload has been initialized.
+// cancelLvl 2: [Cancel] has been clicked, Abort has been called, stop any future parts from uploading.
+$("#cancelbtn").click(() => {
+  if( cancelLvl == 0) {
+    // No uploads have begun, simple enough to reset and reload.
+    document.getElementById("uploadForm").reset();
+    window.location.reload();
+  } else {
+    // This is a bit more complicated, ajax and backend systems have to get involved.
+    cancelLvl = 2;
+    $("#filesLbl").html('The upload is being cancelled...');
+    cancelator();
+  }
+}); // End cancel button.
+
+// reset button
+// Intercept reset button clicks
+// Same behavior as cancel button for cancelLvl 0
+$("#resetbtn").click(() => {
+  document.getElementById("uploadForm").reset();
+  window.location.reload();
+}); // End reset button
 
 // dropArea
 // defines area for drag and drop file uploads
@@ -210,11 +240,28 @@ function trimNulls() {
 // @param {int} fidx - The file index value of the progress bar to update
 // @param {number} pcnt - The percentage value to set the progres bar to
 function thatsProgress(fidx, pcnt) {
-  if(pcnt == 100) {
-    $('#filesList').find(`#pb${fidx}`).removeClass('progress-bar-striped progress-bar-animated').addClass('bg-success');
-  }
-  $('#filesList').find(`#pb${fidx}`).css("width", `${pcnt}%`).attr("aria-valuenow", `${pcnt}%`);
-  $('#filesList').find(`#pb${fidx}`).find('.sr-only').html(`${pcnt}%`);
+  switch (pcnt) {
+    // 100 percent, change bar to solid green
+    case 100:
+      $('#filesList').find(`#pb${fidx}`)
+        .css("width", `${pcnt}%`)
+        .attr("aria-valuenow", `${pcnt}%`)
+        .removeClass('progress-bar-striped progress-bar-animated')
+        .addClass('bg-success')
+        .find('.sr-only').html(`Complete`);
+      break;
+    // -1 percent, change bar to red to signify cancel in progress.
+    case -1:
+      $('#filesList').find(`#pb${fidx}`)
+        .addClass('bg-danger')
+        .find('.sr-only').html(`Cancelled`);
+      break;
+    default:
+      $('#filesList').find(`#pb${fidx}`)
+        .css("width", `${pcnt}%`)
+        .attr("aria-valuenow", `${pcnt}%`)
+        .find('.sr-only').html(`${pcnt}%`);
+  } // End switch
 } // End thatsProgress
 
 // initiator
@@ -271,6 +318,8 @@ function initiator() {
   .then((data) => {
     console.log("Initiator:Promise.all.then:data"); // DEBUG:
     console.log(data);  // DEBUG:
+    // increase cancelLvl to 1.
+    cancelLvl = 1;
     handleMultis();
   })  // Promise.all.then
   .catch((err) => {
@@ -329,9 +378,7 @@ function handleMultis() {
     files = data;
     return await Promise.all(
       files.map( async (sMu) => {
-        sMu.result = await putParts(sMu);
-        console.log(`handleMultis:Promise.all.then signedMultis.map: sMu:`,sMu);  // DEBUG:
-        return sMu.result;
+        return await putParts(sMu);
       })  // End map
     ) // End Promise.all inside a Promise.all
     .catch((err) => {
@@ -343,7 +390,11 @@ function handleMultis() {
     console.log(`handleMultis:Promise.all.then.then terminatedMultis:`,data); // DEBUG:
     files = data;
     $("#uploadForm").hide();
-    success();
+    if(cancelLvl == 2) {
+      cancel();
+    } else {
+      success();
+    }
   })  // End Promise.all.then.then
   .catch((err)=> {
     console.log('error: ',err);
@@ -402,6 +453,9 @@ function putParts(file) {
     file.multiObj.ETags = [];
 
     for( let i = 0; i < file.multiObj.psUs.length; i++ ) {
+      // If [Cancel] has been pressed, do not upload anymore parts.
+      if(cancelLvl == 2 ) { console.log(`CANCELLED:i: ${i}`);break; }
+      // Otherwise...
       let start = i * file.multiObj.parts.size,
           end = (i+1) * file.multiObj.parts.size,
           chunk = (i+1) < file.multiObj.parts.num
@@ -436,8 +490,16 @@ function putParts(file) {
         "PartNumber": (i+1)
       });
     } // End for loop
-    file.QSA = await terminator(file.multiObj);
-    thatsProgress(file.fidx, 100);  // Set progressbar at 100%
+
+    // Check if we're attempting to cancel.
+    console.log(`cancelLvl: ${cancelLvl}`); // DEBUG:
+    if(cancelLvl == 2) {
+      file.QSA = 'CANCELLED';
+      thatsProgress(file.fidx, -1); // Set progressbar at -1 to signify cancel in progress.
+    } else {
+      file.QSA = await terminator(file.multiObj);
+      thatsProgress(file.fidx, 100);  // Set progressbar at 100%
+    }
     return res(file);
   }); // End Promise
 } // End putParts
@@ -476,6 +538,66 @@ async function terminator(obj) {
     throw err;
   }); // End fetch.catch
 }
+
+// cancelator
+// Aborts all MultipartUploads in progress
+async function cancelator() {
+  console.log('cancelator');  // DEBUG:
+  let url = APIG+'/cancelate';
+  // Different steps are required to cancel
+  switch (cancelLvl) {
+    case 0:
+      console.log('cancelator: level 0???'); // DEBUG:
+      // This should have already been done, but just in case...
+      $("#uploadForm").reset();
+      window.location.reload();
+      break;
+    case 1:
+      // This case should never be called. cancelLvl 1 just means upload in progress.
+      console.log('cancelator: level 1...');  // DEBUG:
+      break;
+    case 2:
+      console.log('cancelator: level 2...');  // DEBUG:
+      // Call the cancelator for all files[]
+      Promise.all(
+        files.map( async (file) => {
+          return await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(
+              {
+                "key": file.multiObj.Key,
+                "uploadid": file.multiObj.UploadId
+              }
+            )
+          })  // End fetch
+          .then(async (res) => {
+            console.log('cancelator:fetch.then res', res);  // DEBUG:
+            if(res.ok) {
+              console.log('cancelator:fetch.then res.ok');  // DEBUG:
+              return await res.json();
+            } else {
+              // If the APIG response isn't 200, parse the response and throw it.
+              let reserr=await res.json();
+              console.log(reserr);  // DEBUG:
+              throw reserr.response;
+            }
+          })  // End fetch.then
+          .catch(async (err) => {
+            console.log('cancelator:fetch.catch err',err);  // DEBUG:
+            throw err;
+          }); // End fetch.catch
+        })  // End map
+      ) // End Promise.all
+      .then(() => {
+        // **************** Need Success screen for cancels ********
+        console.log('cancelator: all uploads cancelled.');  // DEBUG:
+      })
+      break;
+    default:
+      // This shouldn't happen either.
+      console.log('cancelator: default???'); // DEBUG:
+  } // End switch
+}  // End cancelator
 
 // success
 // Displays success message and QSAs for uploaded files
@@ -543,6 +665,15 @@ function succ(file) {
     return res(file.QSA);
   }); // End Promise
 } // End succ
+
+// cancel
+// Opposite of success(), shows that the upload was cancelled.
+function cancel() {
+  console.log("CANCEL::");  // DEBUG:
+  $("#cancelMsg").html('The upload has been cancelled.');
+  $("#resetbtn").removeAttr('style').removeClass('disabled');
+  $("#cancel").fadeIn('fast');
+} // End cancel
 
 // validateEml
 // Very basic regex of email provided.
