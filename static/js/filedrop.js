@@ -561,6 +561,7 @@ async function cancelator() {
       // Call the cancelator for all files[]
       Promise.all(
         files.map( async (file) => {
+          console.log('cancelator:file:',JSON.stringify(file.multiObj,null,2)); // DEBUG:
           return await fetch(url, {
             method: 'POST',
             body: JSON.stringify(
@@ -591,6 +592,7 @@ async function cancelator() {
       .then(() => {
         // **************** Need Success screen for cancels ********
         console.log('cancelator: all uploads cancelled.');  // DEBUG:
+        cancel();
       })
       break;
     default:
@@ -670,6 +672,7 @@ function succ(file) {
 // Opposite of success(), shows that the upload was cancelled.
 function cancel() {
   console.log("CANCEL::");  // DEBUG:
+  $("#uploadForm").hide();
   $("#cancelMsg").html('The upload has been cancelled.');
   $("#resetbtn").removeAttr('style').removeClass('disabled');
   $("#cancel").fadeIn('fast');
@@ -713,8 +716,8 @@ function validateEml(mxpass=true) {
 function reckonParts(filesize) {
   let parts = {};
   parts.size = (filesize / maxParts) < minPartSize
-  ? minPartSize
-  : Math.ceil(filesize / maxParts);
+            ? minPartSize
+            : Math.ceil(filesize / maxParts);
   parts.num = Math.ceil(filesize / parts.size);
   return parts;
 } // End reckonParts

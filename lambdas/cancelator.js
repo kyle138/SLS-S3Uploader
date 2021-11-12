@@ -48,21 +48,31 @@ module.exports.handler = async (event, context) => {
     validateProvided(postObj.uploadid),
     validateProvided(postObj.key)
   ])  // posted values validated...
-  .then(() => {
+  .then(async () => {
     params.Key = postObj.key;
     params.UploadId = postObj.uploadid;
     console.log('params:',JSON.stringify(params,null,2));  // DEBUG:
-    S3.abortMultipartUpload(params).promise();
+    return await S3.abortMultipartUpload(params).promise();
   })  // partParams are set
   .then(async () => {
+    console.log('then2'); // DEBUG:
     // Any parts that were being uploaded as Abort was called may still exist.
-    var crumbs = await S3.listParts(params).promise();
-    console.log('crumbs:',JSON.stringify(crumbs,null,2));  // DEBUG:
-    // ******* then call abort again...***************
+    return await S3.listParts(params).promise();
+    // If there aren't any remaining parts, this throws an error down to catch()
+  })
+  .then(async () => {
+    console.log('then3'); // DEBUG:
+    // If listParts found any remaining parts, call abort again.
+    return await S3.abortMultipartUpload(params).promise();
   })
   .catch(async (err) => {
-    console.error('Error caught: ',err);  // DEBUG:
-    return await createResponseObject("400", err.toString());
+    console.log(err.toString()); // DEBUG:
+    if(err.toString().startsWith('NoSuchUpload')) {
+      return await createResponseObject("200","Upload already canceled.");
+    } else {
+      console.error('Error caught: ',err);  // DEBUG:
+      return await createResponseObject("400", err.toString());
+    }
   }); // <<Grinding Noises>>
 
 };  // End exports.handler
