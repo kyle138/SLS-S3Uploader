@@ -87,7 +87,7 @@ module.exports.handler = async (event, context) => {
   }
 
   // Check if EXPDN has been set as an environment variable.
-  const expdn = process.env.hasOwnProperty('EXPDN') ? process.env.EXPDN : 7200;
+  const expdn = process.env.hasOwnProperty('EXPDN') ? Number(process.env.EXPDN) : 7200;
 
   // Check for required fields in postObj
   return await Promise.all([

@@ -59,7 +59,7 @@ module.exports.handler = async (event, context) => {
   }
 
   // Check if EXPUP has been set as an environment variable.
-  const expup = process.env.hasOwnProperty('EXPUP') ? process.env.EXPUP : 7200;
+  const expup = process.env.hasOwnProperty('EXPUP') ? Number(process.env.EXPUP) : 7200;
 
   // Check for required fields in postObj
   return await Promise.all([
