@@ -65,7 +65,8 @@ functions:
     description: "triggered by APIG, returns presigned URLs for putPart anonymous upload to S3 bucket."
     environment:
       EXPUP: ${self:custom.s3config.expup}
-    timeout: 28
+    memorySize: 256
+    timeout: 29
     layers:
       - {Ref: CommonModulesLambdaLayer}
     events:
