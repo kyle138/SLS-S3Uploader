@@ -6,6 +6,7 @@ const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
       maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
       maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
+
 // Initialize holders for files array and eml object.
 var files=[],
     eml = {"valid": false},
@@ -713,11 +714,26 @@ function validateEml(mxpass=true) {
 
 // reckonParts
 // Returns the number and size of parts needed for multipart upload
+// Attempts to keep number of parts < 500 for performance
 function reckonParts(filesize) {
-  let parts = {};
-  parts.size = (filesize / maxParts) < minPartSize
-            ? minPartSize
-            : Math.ceil(filesize / maxParts);
+  let parts = {},
+      gb = 1024*1024*1024;
+  switch(true) {
+    case (filesize < 2.5*gb): // Less than 2.5GB
+      parts.size = minPartSize; // 5MB
+      break;
+    case (filesize < 25*gb):  // Less than 25GB
+      parts.size = minPartSize*10;  // 50MB
+      break;
+    case (filesize < 250*gb): // Less than 250GB
+      parts.size = minPartSize*100; // 500MB
+      break;
+    case (filesize < 500*gb): // Less than 500GB
+      parts.size = gb;  // 1GB
+      break;
+    default:                  // Over 500GB
+      parts.size = maxPartSize; // 5GB
+  } // End switch
   parts.num = Math.ceil(filesize / parts.size);
   return parts;
 } // End reckonParts
