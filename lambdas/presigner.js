@@ -65,11 +65,12 @@ module.exports.handler = async (event, context) => {
   return await Promise.all([
     validateProvided(postObj.uploadid),
     validateProvided(postObj.key),
-    validateProvided(Number(postObj.numparts))
+    validateProvided(Number(postObj.partsbegin)),
+    validateProvided(Number(postObj.partsend))
   ])  // posted values validated...
   .then(() => {
     let params = [];
-    for(let i = 1; i <= postObj.numparts; i++) {
+    for(let i = postObj.partsbegin; i <= postObj.partsend; i++) {
       params.push({
         "Bucket": process.env.S3BUCKET,
         "Key": postObj.key,
@@ -83,10 +84,6 @@ module.exports.handler = async (event, context) => {
   .then((params) => {
     return Promise.all(
       params.map( async (param) => {
-        // let psu = await S3.getSignedUrlPromise(
-        //   'uploadPart',
-        //   param
-        // );
         console.log("param:"+JSON.stringify(param,null,2)); // DEBUG:
         return {
           "partnumber": param.PartNumber,
@@ -97,9 +94,6 @@ module.exports.handler = async (event, context) => {
         };  // End return
       })  // End map
     ); // End Promise.all
-    // .then((psUs) => {
-    //
-    // })
   })
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:

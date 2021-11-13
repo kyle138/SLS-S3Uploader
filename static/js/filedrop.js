@@ -364,11 +364,29 @@ function handleMultis() {
   console.log("handleMultis",files);
   Promise.all(
     files.map( async (multi) => {
-      multi.multiObj.psUs = await getPresignedUrl({
-        "key": multi.multiObj.Key,
-        "uploadid": multi.multiObj.UploadId,
-        "numparts": multi.multiObj.parts.num
-      });
+      multi.multiObj.psUs = [];
+      for(let partsbegin=1; partsbegin<=multi.multiObj.parts.num; partsbegin+=1000) {
+        let partsend = partsbegin+999 > multi.multiObj.parts.num
+                     ? multi.multiObj.parts.num
+                     : partsbegin+999;
+        console.log(`partsbegin: ${partsbegin}`);
+        console.log(`partsend: ${partsend}`);
+        multi.multiObj.psUs = multi.multiObj.psUs.concat(
+          await getPresignedUrl({
+            "key": multi.multiObj.Key,
+            "uploadid": multi.multiObj.UploadId,
+            "partsbegin": partsbegin,
+            "partsend": partsend
+          })
+        );
+      } // End for loop
+
+      // Move all this up into that for loop ***************************
+      // multi.multiObj.psUs = await getPresignedUrl({
+      //   "key": multi.multiObj.Key,
+      //   "uploadid": multi.multiObj.UploadId,
+      //   "numparts": multi.multiObj.parts.num
+      // });
       console.log("multiObj.psUs:",multi.multiObj.psUs);  // DEBUG:
       thatsProgress(multi.fidx, 10);  // set progress at 10%
       return multi;
@@ -734,6 +752,8 @@ function reckonParts(filesize) {
     default:                  // Over 500GB
       parts.size = maxPartSize; // 5GB
   } // End switch
-  parts.num = Math.ceil(filesize / parts.size);
+  parts.num = Math.ceil(filesize / parts.size) < 10000
+            ? Math.ceil(filesize / parts.size)
+            : 10000;
   return parts;
 } // End reckonParts
