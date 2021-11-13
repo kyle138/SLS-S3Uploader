@@ -206,7 +206,6 @@ function handleFile(file) {
 // Enables or disables the [Submit] button as the email and file fields are filled out
 function checkStatus() {
   console.log("checkStatus"); // DEBUG:
-  // trimNulls();
   let noNulls = trimNulls();
   if (eml.valid && noNulls.length > 0) {
     console.log("enable");  // DEBUG:
@@ -227,7 +226,6 @@ function checkStatus() {
 // Remove any nulls and return sanitized array.
 function trimNulls() {
   return files.reduce( (res,file) => {
-    console.log(file);  // DEBUG:
     if (file != null) {
       console.log(`File added: ${file}`); //// DEBUG:
       res.push(file);
@@ -358,7 +356,7 @@ function initiator() {
 // It updates the elements of that array with:
 // UploadId, S3 object key, and the file object.
 // handleMultis handles uploading the parts of each multipart upload of each file in the file[] array
-// by called getPresignedUrl for each part, then calling putParts for each part,
+// by calling getPresignedUrl for all parts, then calling putParts for each part,
 // then calls success() after all uploads are completed successfully.
 function handleMultis() {
   console.log("handleMultis",files);
@@ -379,7 +377,7 @@ function handleMultis() {
             "partsbegin": partsbegin,
             "partsend": partsend
           })
-        );
+        );  // End concat
       } // End for loop
       console.log("multiObj.psUs:",multi.multiObj.psUs);  // DEBUG:
       thatsProgress(multi.fidx, 10);  // set progress at 10%
@@ -718,8 +716,7 @@ function validateEml(mxpass=true) {
     eml.valid = true;
     console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
-    $("#alertMsg").html("");
-    $("#alertMsg").removeClass("alert alert-danger");
+    $("#alertMsg").html("").removeClass("alert alert-danger");
     $("#row-files").fadeIn();
   }
 } // End validateEml
