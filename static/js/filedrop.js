@@ -413,11 +413,12 @@ function handleMultis() {
 } // End handleMultis
 
 // getPresignedUrl
-// returns presigned URL for part provided
+// returns presigned URL(s) for part(s) provided
 // @param part - Object
 // part.key
 // part.uploadid
-// part.partnumber
+// part.partsbegin
+// part.partsend
 async function getPresignedUrl(part) {
   console.log('getPresignedUrl: ',part);  // DEBUG:
   let url = APIG+'/presign';
