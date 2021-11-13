@@ -10,9 +10,6 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-// const partParams = {
-//   Expires: 300
-// };
 
 // validateProvided()
 // Checks if provided data is a string or number of some length or value

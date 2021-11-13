@@ -380,13 +380,6 @@ function handleMultis() {
           })
         );
       } // End for loop
-
-      // Move all this up into that for loop ***************************
-      // multi.multiObj.psUs = await getPresignedUrl({
-      //   "key": multi.multiObj.Key,
-      //   "uploadid": multi.multiObj.UploadId,
-      //   "numparts": multi.multiObj.parts.num
-      // });
       console.log("multiObj.psUs:",multi.multiObj.psUs);  // DEBUG:
       thatsProgress(multi.fidx, 10);  // set progress at 10%
       return multi;
