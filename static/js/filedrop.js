@@ -364,6 +364,7 @@ function handleMultis() {
   console.log("handleMultis",files);
   Promise.all(
     files.map( async (multi) => {
+      // Only request 1000 psUs at a time from lambda/presigner to avoid timeouts.
       multi.multiObj.psUs = [];
       for(let partsbegin=1; partsbegin<=multi.multiObj.parts.num; partsbegin+=1000) {
         let partsend = partsbegin+999 > multi.multiObj.parts.num
