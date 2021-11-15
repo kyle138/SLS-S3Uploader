@@ -46,3 +46,9 @@
 #qsaArea textarea {
   white-space: pre;
 }
+.uploaderror {
+  color: #721c24;
+}
+.failed {
+  text-decoration: line-through;
+}

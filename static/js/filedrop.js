@@ -509,6 +509,7 @@ function putParts(file) {
       file.QSA = 'CANCELLED';
       thatsProgress(file.fidx, -1); // Set progressbar at -1 to signify cancel in progress.
     } else {
+      // Complete the multipart upload and get download QSA.
       file.QSA = await terminator(file.multiObj);
       thatsProgress(file.fidx, 100);  // Set progressbar at 100%
     }
@@ -537,7 +538,7 @@ async function terminator(obj) {
     console.log(`terminator:fetch.then res`,res); // DEBUG:
     if(res.ok) {
       console.log(`terminate:fetch.then res.ok`);
-      return await res.text();
+      return await res.json();
     } else {
       // If the APIG response isn't 200, parse the response and throw it.
       let reserr=await res.json();
@@ -643,10 +644,17 @@ function success() {
     }); // End Copy to clipboard
     // Add it to the page
     $("#qsaArea").append(qsaarea);
-  })  // End Promise.all.then
-  .then(() => {
+  // })  // End Promise.all.then
+  // .then(() => {
     let s = (files.length > 1) ? 's have': ' has';
-    $("#successMsg").html(`The upload${s} completed successfully.`);
+    if(qsas.includes('Upload failed.')) {
+      $("#successMsg").html(
+        `The upload${s} completed with errors.
+        <h3 class='text-muted'>The files marked below in red may need to be uploaded again.</h3>`
+      );
+    } else {
+      $("#successMsg").html(`The upload${s} completed successfully.`);
+    }
     s = (files.length > 1) ? 's' : '';
     $("#successListLbl").html(`You can download the file${s} using the provided link${s}.`);
     $("#qsaAreaLbl").html(`Alternatively, you can copy the link${s} to your clipboard.`);
@@ -664,19 +672,30 @@ function success() {
 function succ(file) {
   return new Promise((res) => {
     console.log('succ:file: ',file);  // DEBUG:
-    let filesucc = $(`
-      <div class="container-fluid row filerow" id="sidx${file.fidx}">
-        <div class="text-truncate file">
-          <a target="_blank" href="${file.QSA}">
-            <span class="fas fa-file"></span>&nbsp;
-            ${file.fileObj.name}
-          </a>
+    let filesucc;
+    if(file.QSA.response != 'Upload failed.') {
+      filesucc = $(`
+        <div class="container-fluid row filerow" id="sidx${file.fidx}">
+          <div class="text-truncate file">
+            <a target="_blank" href="${file.QSA.response}">
+              <span class="fas fa-file"></span>&nbsp;
+              ${file.fileObj.name}
+            </a>
+          </div>
         </div>
-      </div>
-    `);
+      `);
+    } else {
+      filesucc = $(`
+        <div class="container-fluid row filerow" id="sidx${file.fidx}">
+          <div class="text-truncate uploaderror">
+            <span class="fas fa-exclamation-circle"></span>&nbsp;
+            <span class="failed">${file.fileObj.name}</span>
+          </div>
+        </div>
+      `);
+    }
     $("#successList").append(filesucc);
-    console.log('succ:file.QSA:',file.QSA); // DEBUG:
-    return res(file.QSA);
+    return res(file.QSA.response);
   }); // End Promise
 } // End succ
 

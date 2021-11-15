@@ -109,7 +109,7 @@ module.exports.handler = async (event, context) => {
   })  // Multipart Upload completed
   .then(async (termResp) => {
     console.log('completeMultipartUpload response:'+JSON.stringify(termResp,null,2));  // DEBUG:
-    return await S3.getSignedUrlPromise(
+    let qsa = await S3.getSignedUrlPromise(
       'getObject',
       {
         "Bucket": process.env.S3BUCKET,
@@ -117,10 +117,12 @@ module.exports.handler = async (event, context) => {
         "Expires": expdn
       }
     );
+    return await createResponseObject("200",qsa);
   })  // End Promise.all.then.then
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
-    return await createResponseObject("400", err.toString());
+    // return await createResponseObject("400", err.toString());
+    return await createResponseObject("200", "Upload failed.");
   }); // <<Grinding Noises>>
 
 };  // End exports.handler
