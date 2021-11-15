@@ -491,9 +491,28 @@ function putParts(file) {
           throw resperr.response;
         }
       })  // End fetch.then
-      .catch((err) => {
+      .catch(async (err) => {
         console.log(`putParts:for[${i}]:fetch.catch err`,err);  // DEBUG:
-        // *************** Need to retry failed parts ******************
+        // Part failed to PUT, try one more time.
+        return await fetch(file.multiObj.psUs[i].psu, {
+          method: 'PUT',
+          body: chunk
+        })
+        .then(async (resp) => {
+          console.log(`Second attempt to put Part[${i}]`,resp); // DEBUG:
+          if(resp.ok) {
+            // set progress bar at pcnt * i+1 + 10 (max of 95%);
+            thatsProgress(file.fidx, pcnt*(i+1)+10);
+            return await resp.headers.get('ETag');
+          } else {
+            let resperr = await resp.json();
+            console.log(`Second attempt to put Part[${i}] failed.`,resperr); // DEBUG:
+            throw resperr.response;
+          }
+        })  // End 2nd fetch.then
+        .catch((err) => {
+          console.log(`This upload will fail when terminate is called.`); // DEBUG:
+        });
       });  // End fetch.catch
       console.log(`etag: ${etag}`); // DEBUG:
       // Save each ETag to the multiObj
