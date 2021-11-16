@@ -114,7 +114,6 @@ async function handleDrop(e) {
   console.log('handleDrop:'); // DEBUG:
   let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
     if (file.type && file.size%4096 != 0) {
-      console.log(`File added: ${file.name}`); // DEBUG:
       res.push(file);
     }
     return res;
@@ -139,7 +138,6 @@ function handleFiles(fls) {
     })  // End map
   ) // End Promise.All
   .then( () => {
-    console.log("Promise.all.then");  // DEBUG:
     checkStatus();
   })  // End promise.all.then
   .catch((err) => {
@@ -151,8 +149,7 @@ function handleFiles(fls) {
 // Add file progress row to filesList div
 // @params {file} file - The file selected for upload
 function handleFile(file) {
-  console.log("handleFile");  // DEBUG:
-  console.log(file);  // DEBUG:
+  console.log("handleFile:",file);  // DEBUG:
 
   // Check if file is over AWS maximum of 5TB
   // and if file is one of the accepted file types.
@@ -214,7 +211,6 @@ function checkStatus() {
     return true;
   } else {
     console.log("disable"); // DEBUG:
-    console.log(`noNulls.length ${noNulls.length}`); // DEBUG:
     $("#submitbtnwrpr").tooltip('enable');
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
@@ -227,7 +223,6 @@ function checkStatus() {
 function trimNulls() {
   return files.reduce( (res,file) => {
     if (file != null) {
-      console.log(`File added: ${file}`); //// DEBUG:
       res.push(file);
     }
     return res;
@@ -267,7 +262,7 @@ function thatsProgress(fidx, pcnt) {
 // Initiate the upload process for each file in files[];
 // Set Key and UploadId values for file, update progressbar to 5%
 function initiator() {
-  console.log("Initiator");
+  console.log("Initiator"); // DEBUG:
   // Settings for to fetch
   let url = APIG+'/initiate';
   let initData = {
@@ -299,8 +294,6 @@ function initiator() {
         }
       })  // End fetch.then
       .then((data) => {
-        console.log("Initiator:fetch.then.then data");  // DEBUG:
-        console.log(data); // DEBUG:
         file.multiObj.Key = data.Key;
         file.multiObj.UploadId = data.UploadId;
         // Start the progress bar at 5%
@@ -309,21 +302,17 @@ function initiator() {
       })  // End fetch.then.then
       .catch((err) => {
         console.log("Initiator:fetch.catch",err); // DEBUG:
-        console.log(err); // DEBUG:
         throw err;
       }); // End fetch.catch
     })  // End map
   ) // Promise.all
   .then((data) => {
-    console.log("Initiator:Promise.all.then:data"); // DEBUG:
-    console.log(data);  // DEBUG:
     // increase cancelLvl to 1.
     cancelLvl = 1;
     handleMultis();
   })  // Promise.all.then
   .catch((err) => {
-    console.log("Initiator:Promise.all.catch:err"); // DEBUG:
-    console.log(err); // DEBUG:
+    console.log("Initiator:Promise.all.catch:err",err); // DEBUG:
     // Initiator lambda can return errors based on invalid email or file name/type
     // Different behaviors are called on the UI based upon the error type.
     switch (err) {
@@ -339,7 +328,7 @@ function initiator() {
         break;
       case err.toString().startsWith('Error: Filetype invalid.') ? err : '' :
         // Yeah, I know, but I don't know why this works either.
-        console.log("FILETYPE");
+        console.log("FILETYPE");  // DEBUG:
         $("#alertMsg").addClass("alert alert-danger").html(
           err + " Remove the file and try again."
         ).fadeIn('fast');
@@ -359,7 +348,7 @@ function initiator() {
 // by calling getPresignedUrl for all parts, then calling putParts for each part,
 // then calls success() after all uploads are completed successfully.
 function handleMultis() {
-  console.log("handleMultis",files);
+  console.log("handleMultis",files);  // DEBUG:
   Promise.all(
     files.map( async (multi) => {
       // Only request 1000 psUs at a time from lambda/presigner to avoid timeouts.
@@ -368,8 +357,6 @@ function handleMultis() {
         let partsend = partsbegin+999 > multi.multiObj.parts.num
                      ? multi.multiObj.parts.num
                      : partsbegin+999;
-        console.log(`partsbegin: ${partsbegin}`);
-        console.log(`partsend: ${partsend}`);
         multi.multiObj.psUs = multi.multiObj.psUs.concat(
           await getPresignedUrl({
             "key": multi.multiObj.Key,
@@ -394,7 +381,7 @@ function handleMultis() {
     ) // End Promise.all inside a Promise.all
     .catch((err) => {
       console.log('Promise.Promise.catch:',err);  // DEBUG:
-      // ********** DO SOMETHING HERE??? ********************
+      throw err;
     }); // End Promise.all.Promise.all.catch
   })  // End Promise.all.then
   .then((data) => {
@@ -409,6 +396,7 @@ function handleMultis() {
   })  // End Promise.all.then.then
   .catch((err)=> {
     console.log('error: ',err);
+    // *********** Throw error message to UI ***************
   }); // End Promise.all.catch
 } // End handleMultis
 
@@ -427,13 +415,12 @@ async function getPresignedUrl(part) {
     body: JSON.stringify(part)
   })
   .then(async (res) => {
-    console.log('getPresignedUrl:fetch.then',res); // DEBUG:
     if(res.ok) {
       return await res.json();
     } else {
       // If the APIG response isn't 200, parse the response and throw it.
       let reserr=await res.json();
-      console.log(reserr);  // DEBUG:
+      console.log('getPresignedUrl:error:',reserr);  // DEBUG:
       throw reserr.response;
     }
   })  // End fetch.then
@@ -453,7 +440,7 @@ async function getPresignedUrl(part) {
 // @param {file object} file - The file object to put
 function putParts(file) {
   return new Promise(async (res, rej) => {
-    console.log('putParts:file ',file);
+    console.log('putParts:file ',file); // DEBUG:
 
     // If the psUs aren't a valid array it causes an infinite loop
     if(typeof file.multiObj.psUs.length !== 'number') {
@@ -479,15 +466,12 @@ function putParts(file) {
         body: chunk
       })  // End fetch
       .then(async (resp) => {
-        console.log(`putParts:for[${i}]:fetch.then resp`,resp); // DEBUG:
         if(resp.ok) {
-          console.log(`putParts:for[${i}]:fetch.then ok resHeaders: `,resp.headers.get('ETag'));  // DEBUG:
           // set progress bar at pcnt * i+1 + 10 (max of 95%);
           thatsProgress(file.fidx, pcnt*(i+1)+10);
           return await resp.headers.get('ETag');
         } else {
           let resperr = await resp.json();
-          console.log('resp.ok, NOT!',resperr); // DEBUG:
           throw resperr.response;
         }
       })  // End fetch.then
@@ -499,7 +483,6 @@ function putParts(file) {
           body: chunk
         })
         .then(async (resp) => {
-          console.log(`Second attempt to put Part[${i}]`,resp); // DEBUG:
           if(resp.ok) {
             // set progress bar at pcnt * i+1 + 10 (max of 95%);
             thatsProgress(file.fidx, pcnt*(i+1)+10);
@@ -514,7 +497,7 @@ function putParts(file) {
           console.log(`This upload will fail when terminate is called.`); // DEBUG:
         });
       });  // End fetch.catch
-      console.log(`etag: ${etag}`); // DEBUG:
+      console.log(`etag[${i}]: ${etag}`); // DEBUG:
       // Save each ETag to the multiObj
       file.multiObj.ETags.push({
         "ETag": etag,
@@ -557,14 +540,11 @@ async function terminator(obj) {
     )
   })  // End fetch
   .then(async (res) => {
-    console.log(`terminator:fetch.then res`,res); // DEBUG:
     if(res.ok) {
-      console.log(`terminate:fetch.then res.ok`);
       return await res.json();
     } else {
       // If the APIG response isn't 200, parse the response and throw it.
       let reserr=await res.json();
-      console.log(reserr);  // DEBUG:
       throw reserr.response;
     }
   })  // End fetch.then
@@ -607,14 +587,11 @@ async function cancelator() {
             )
           })  // End fetch
           .then(async (res) => {
-            console.log('cancelator:fetch.then res', res);  // DEBUG:
             if(res.ok) {
-              console.log('cancelator:fetch.then res.ok');  // DEBUG:
               return await res.json();
             } else {
               // If the APIG response isn't 200, parse the response and throw it.
               let reserr=await res.json();
-              console.log(reserr);  // DEBUG:
               throw reserr.response;
             }
           })  // End fetch.then
@@ -625,7 +602,6 @@ async function cancelator() {
         })  // End map
       ) // End Promise.all
       .then(() => {
-        // **************** Need Success screen for cancels ********
         console.log('cancelator: all uploads cancelled.');  // DEBUG:
         cancel();
       })
@@ -641,7 +617,6 @@ async function cancelator() {
 // To be called after all uploads have completed and we have QSA for each
 function success() {
   console.log("success::"); // DEBUG:
-  console.log(files); // DEBUG:
 
   Promise.all(
     files.map( async (file) => {
@@ -649,7 +624,6 @@ function success() {
     })  // End map
   ) // End Promise.all
   .then((qsas) => {
-    console.log('succ:Promise.all.then',qsas);  // DEBUG:
     let qsaarea = $(`
       <div class="input-group">
       <div class="input-group-prepend">
@@ -756,7 +730,6 @@ function validateEml(mxpass=true) {
     });
   } else {
     eml.valid = true;
-    console.log("email valid:"+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
     $("#alertMsg").html("").removeClass("alert alert-danger");
     $("#row-files").fadeIn();
