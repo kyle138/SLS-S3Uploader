@@ -77,7 +77,7 @@ $("#cancelbtn").click(() => {
 // reset button
 // Intercept reset button clicks
 // Same behavior as cancel button for cancelLvl 0
-$("#resetbtn").click(() => {
+$(".resetbtn").click(() => {
   document.getElementById("uploadForm").reset();
   window.location.reload();
 }); // End reset button
@@ -396,7 +396,10 @@ function handleMultis() {
   })  // End Promise.all.then.then
   .catch((err)=> {
     console.log('error: ',err);
-    // *********** Throw error message to UI ***************
+    $('#uploadForm').hide();
+    $('#failMsg').html('Upload has failed. Please try again.');
+    $('.resetBtn').removeAttr('style').removeClass('disabled');
+    $('#failed').fadeIn('fast');
   }); // End Promise.all.catch
 } // End handleMultis
 
@@ -701,7 +704,7 @@ function cancel() {
   console.log("CANCEL::");  // DEBUG:
   $("#uploadForm").hide();
   $("#cancelMsg").html('The upload has been cancelled.');
-  $("#resetbtn").removeAttr('style').removeClass('disabled');
+  $(".resetbtn").removeAttr('style').removeClass('disabled');
   $("#cancel").fadeIn('fast');
 } // End cancel
 
