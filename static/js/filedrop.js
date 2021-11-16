@@ -522,6 +522,9 @@ function putParts(file) {
       });
     } // End for loop
 
+    // Sort ETags in ascending order based on PartNumber value
+    file.multiObj.ETags.sort((a,b) => {return a.PartNumber - b.PartNumber});
+
     // Check if we're attempting to cancel.
     console.log(`cancelLvl: ${cancelLvl}`); // DEBUG:
     if(cancelLvl == 2) {
