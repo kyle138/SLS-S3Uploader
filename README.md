@@ -41,7 +41,7 @@ Serverless stack allowing anonymous uploads to S3 bucket.
 - CORS has to be configured to include:
   ```
   "ExposeHeaders": [
-  "ETag"
+    "ETag"
   ]
   ```
 - Further recommendations:
