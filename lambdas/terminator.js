@@ -96,10 +96,12 @@ function sendNotification(params) {
     params.key = params.key.split('/');
     // Build the message.
     let msg = `
-      Uploader: ${params.key[1]}
-      File Name: ${params.key[2]}
-      Download Link: ${params.QSA}
-    `;
+A file has recently been uploaded. Please see details below:
+
+Uploader: ${params.key[1]}
+File Name: ${params.key[2]}
+Download Link: ${params.QSA}
+`;
     return SNS.publish({
       Message: msg,
       Subject: 'Uploads Notification',
