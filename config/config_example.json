@@ -1,12 +1,12 @@
 {
   "dev1": {
     "bucket": "dev-upload.yourdomain.com",
-    "expup": 7200,
+    "expup": 86400,
     "expdn": 604800
   },
   "v1": {
     "bucket": "upload.yourdomain.com",
-    "expup": 7200,
+    "expup": 86400,
     "expdn": 604800
   }
 }
