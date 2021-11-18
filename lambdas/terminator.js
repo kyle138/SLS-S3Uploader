@@ -10,7 +10,6 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-const termParams = {};
 
 // validateProvided()
 // Checks if provided data is a string of some length
@@ -87,29 +86,43 @@ module.exports.handler = async (event, context) => {
     return await createResponseObject("400","Internal error. Please contact admin.");
   }
 
+  // Check if EXPDN has been set as an environment variable.
+  const expdn = process.env.hasOwnProperty('EXPDN') ? Number(process.env.EXPDN) : 7200;
+
   // Check for required fields in postObj
   return await Promise.all([
     validateProvided(postObj.key),
     validateProvided(postObj.uploadid),
     validateProvided(postObj.parts)
   ])  // posted values validated...
-  .then(async () => { // set multiParams
-    termParams.Bucket = process.env.S3BUCKET;
-    termParams.Key = postObj.key;
-    termParams.UploadId = postObj.uploadid;
-    termParams.MultipartUpload = {
-      Parts: postObj.parts
+  .then(async () => { // set termParams
+    let termParams = {
+      "Bucket": process.env.S3BUCKET,
+      "Key": postObj.key,
+      "UploadId": postObj.uploadid,
+      "MultipartUpload": {
+        "Parts": postObj.parts
+      }
     };
     console.log("termParams:"+JSON.stringify(termParams,null,2)); // DEBUG:
     return await S3.completeMultipartUpload(termParams).promise();
-  })  // multiParams are set...
-  .then(async (termResp) => { // create Multipart upload
+  })  // Multipart Upload completed
+  .then(async (termResp) => {
     console.log('completeMultipartUpload response:'+JSON.stringify(termResp,null,2));  // DEBUG:
-    return await createResponseObject("200", "Upload Complete");
-  })  // multiResp created
+    let qsa = await S3.getSignedUrlPromise(
+      'getObject',
+      {
+        "Bucket": process.env.S3BUCKET,
+        "Key": postObj.key,
+        "Expires": expdn
+      }
+    );
+    return await createResponseObject("200",qsa);
+  })  // End Promise.all.then.then
   .catch(async (err) => {
     console.error('Error caught: ',err);  // DEBUG:
-    return await createResponseObject("400", err.toString());
+    // return await createResponseObject("400", err.toString());
+    return await createResponseObject("200", "Upload failed.");
   }); // <<Grinding Noises>>
 
 };  // End exports.handler

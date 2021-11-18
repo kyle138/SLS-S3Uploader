@@ -63,6 +63,9 @@ functions:
   presigner:
     handler: lambdas/presigner.handler
     description: "triggered by APIG, returns presigned URLs for putPart anonymous upload to S3 bucket."
+    environment:
+      EXPUP: ${self:custom.s3config.expup}
+    memorySize: 256
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
@@ -71,11 +74,21 @@ functions:
   terminator:
     handler: lambdas/terminator.handler
     description: "triggered by APIG, Completes the multipart upload."
+    environment:
+      EXPDN: ${self:custom.s3config.expdn}
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
     events:
       - httpApi: 'POST /post/terminate'
+  cancelator:
+    handler: lambdas/cancelator.handler
+    description: "triggered by APIG, Aborts the multipart upload."
+    timeout: 28
+    layers:
+      - {Ref: CommonModulesLambdaLayer}
+    events:
+      - httpApi: 'POST /post/cancelate'
 #      - s3: ${env:BUCKET}
 
 # you can add CloudFormation resource templates here

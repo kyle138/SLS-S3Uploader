@@ -1,27 +1,26 @@
+.jumbotron {
+  background-color: #024;
+  color: #c7c7c7;
+}
 #droparea {
   border: 3px dashed #024;
   border-radius: 18px;
-  font-family: sans-serif;
-  margin: auto 40px 40px;
   padding: 20px;
 }
 #droparea.highlight {
   border-color: #69BE28;
 }
-p {
-  margin-top: 0px;
-}
 .dropform {
   margin-bottom: 10px;
 }
-#gallery {
-  margin-top: 10px;
+.filesList {
+  padding-top: 20px;
 }
-#gallery img {
-  width: 150px;
-  margin-bottom: 10px;
-  margin-right: 10px;
-  vertical-align: middle;
+.file {
+  color: #024;
+}
+.filerow {
+  padding-bottom: 10px;
 }
 .button {
   display: inline-block;
@@ -29,18 +28,27 @@ p {
   background: #024;
   cursor: pointer;
   border-radius: 5px;
-  border: 1px solid #69BE28;
-  color: #69BE28;
+  border: 1px solid #c7c7c7;
+  color: #c7c7c7;
 }
 .button:hover {
-  background: #69BE28;
+  background: #c7c7c7;
   color: #024;
 }
 #fileElem {
   display:none;
 }
-#uploadForm {
+#uploadForm, #success {
   margin: 40px;
   padding: 20px;
   border: 1px solid #c7c7c7;
+}
+#qsaArea textarea {
+  white-space: pre;
+}
+.uploaderror {
+  color: #721c24;
+}
+.failed {
+  text-decoration: line-through;
 }

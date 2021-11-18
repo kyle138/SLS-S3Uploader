@@ -18,6 +18,60 @@ const multiParams = {
   ContentType: 'application/pdf'  // ******** This needs to be set dynamically *******
 };
 
+// Array of allowed MIME types
+const mimetypes = [
+  'application/epub+zip',
+  'application/gzip',
+  'application/json',
+  'application/msword',
+  'application/pdf',
+  'application/rtf',
+  'application/vnd.oasis.opendocument.presentation',
+  'application/vnd.oasis.opendocument.spreadsheet',
+  'application/vnd.oasis.opendocument.text',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.rar',
+  'application/vnd.visio',
+  'application/x-7z-compressed',
+  'application/x-bzip',
+  'application/x-bzip2',
+  'application/x-tar',
+  'application/zip',
+  'audio/3gpp',
+  'audio/3gpp2',
+  'audio/aac',
+  'audio/mpeg',
+  'audio/ogg',
+  'audio/wav',
+  'audio/webm',
+  'font/otf',
+  'font/ttf',
+  'font/woff',
+  'font/woff2',
+  'image/bmp',
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/svg+xml',
+  'image/tiff',
+  'image/vnd.microsoft.icon',
+  'image/webp',
+  'text/css',
+  'text/csv',
+  'text/plain',
+  'video/3gpp',
+  'video/3gpp2',
+  'video/mp4',
+  'video/mpeg',
+  'video/ogg',
+  'video/webm',
+  'video/x-msvideo',
+];
+
 // validateFilename()
 // Checks if filename is a string of some length
 // @param {string} filename - The name of the file to upload
@@ -34,9 +88,14 @@ function validateFilename(name) {
 
 // validateFiletype()
 // Checks if filetype is an accepted MIME type
-// *********************** finish this function ******************
 function validateFiletype(type) {
-  
+  return new Promise((res, rej) => {
+    if (mimetypes.indexOf(type) == -1) {
+      return rej( new Error(`Filetype invalid. ${type} is not an accepted MIME type.`));
+    } else {
+      return res();
+    }
+  });
 } // End validateFiletype
 
 // validateEmail()
@@ -101,14 +160,22 @@ module.exports.handler = async (event, context) => {
     return await createResponseObject("400","Internal error. Please contact admin.");
   }
 
+  // Check if Field of Industry was filled out
+  if(postObj.industry !== "") {
+    console.error("Game: Checkers, Number of Players: 0");  // Bad robot!
+    return await createResponseObject("400","Insufficient empathetic request. Please contact admin.");
+  }
+
   // Check for required fields in postObj
   return await Promise.all([
     validateEmail(postObj.email),
-    validateFilename(postObj.filename)
+    validateFilename(postObj.filename),
+    validateFiletype(postObj.filetype)
   ])  // posted values validated...
   .then(async () => { // set multiParams
     multiParams.Bucket = process.env.S3BUCKET;
-    multiParams.Key = await createKeyname( postObj.file, postObj.email );
+    multiParams.Key = await createKeyname( postObj.filename, postObj.email );
+    multiParams.ContentType = postObj.filetype;
     console.log("multiParams:"+JSON.stringify(multiParams,null,2)); // DEBUG:
   })  // multiParams are set...
   .then(async () => { // create Multipart upload
