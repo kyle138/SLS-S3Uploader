@@ -12,11 +12,6 @@ const S3 = new AWS.S3({
 });
 
 // Is 'Instantialize' a real word?
-const multiParams = {
-  Bucket: "BUCKETHOLDER",
-  Key: "KEYHOLDER",
-  ContentType: 'application/pdf'  // ******** This needs to be set dynamically *******
-};
 
 // Array of allowed MIME types
 const mimetypes = [
@@ -173,12 +168,15 @@ module.exports.handler = async (event, context) => {
     validateFiletype(postObj.filetype)
   ])  // posted values validated...
   .then(async () => { // set multiParams
-    multiParams.Bucket = process.env.S3BUCKET;
-    multiParams.Key = await createKeyname( postObj.filename, postObj.email );
-    multiParams.ContentType = postObj.filetype;
-    console.log("multiParams:"+JSON.stringify(multiParams,null,2)); // DEBUG:
+    const multiParams = {
+      Bucket: process.env.S3BUCKET,
+      Key: await createKeyname( postObj.filename, postObj.email ),
+      ContentType: postObj.filetype
+    };
+    return multiParams;
   })  // multiParams are set...
-  .then(async () => { // create Multipart upload
+  .then(async (multiParams) => { // create Multipart upload
+    console.log("multiParams:"+JSON.stringify(multiParams,null,2)); // DEBUG:
     const multiResp = await S3.createMultipartUpload(multiParams).promise();
     console.log('createMultipartUpload response:'+JSON.stringify(multiResp,null,2));  // DEBUG:
     return {
