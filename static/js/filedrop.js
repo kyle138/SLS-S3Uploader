@@ -1,7 +1,7 @@
 'use strict';
 
 // Initialize some constants
-const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
+const APIG="https://asgtibnd68.execute-api.us-east-1.amazonaws.com/post",
       minPartSize = 5 * 1024 * 1024, // 5MB
       maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
       maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
