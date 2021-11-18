@@ -4,22 +4,22 @@ Serverless stack allowing anonymous uploads to S3 bucket.
 ## This serverless stack creates the following elements:
 
 ### Lambdas:
-- *initiator.js*
+- **initiator.js**
   - Called when [Submit] button is clicked to initiate upload process
   - Validates provided email domain
   - Checks for accepted filetype of upload
   - Creates S3 Object key based on {email}/{timestamp}-{filename} and sanitized for S3
   - Creates Multipart Upload
   - Returns Key and UploadId
-- *presigner.js*
+- **presigner.js**
   - Creates presigned URLs for the specified number of file slices
   - Returns array of presigned URLs
-- *terminator.js*
+- **terminator.js**
   - Completes the multipart upload
   - Publishes notification to SNS topic
   - Returns download presigned URL for the completed upload if successful
   - Returns "Upload failed." if not successful
-- *cancelator.js*
+- **cancelator.js**
   - Called when [Cancel] is clicked during upload process
   - Attempts to abort the multipart upload
   - Checks if any parts remain and calls abort again if necessary
@@ -34,8 +34,8 @@ Serverless stack allowing anonymous uploads to S3 bucket.
 
 ### S3:
 - One bucket to host both the upload form and the uploaded files
-  - *static/* - FrontEnd files
-  - *ul/* - Directory files are uploaded to
+  - **static/** - FrontEnd files
+  - **ul/** - Directory files are uploaded to
 - Configured for static website hosting
 - Permissions allows public read access for all files in /static*
 - CORS has to be configured to include:
@@ -49,21 +49,21 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   - Create a lifecycle rule to periodically clean up the ul/ folder
 
 ### FrontEnd:
-- The *static/* folder will need to be uploaded to the S3 bucket to host the front end form
-- *static/*
-  - *index.html* - The upload form
-  - *js/*
-    - *filedrop.js* - Handles all aspects of the file upload process.
-    - *mimetypes.js* - List of accepted file types.
-    - *defaults.js* - Default values for interface customization.
+- The **static/** folder will need to be uploaded to the S3 bucket to host the front end form
+- **static/**
+  - **index.html** - The upload form
+  - **js/**
+    - **filedrop.js** - Handles all aspects of the file upload process.
+    - **mimetypes.js** - List of accepted file types.
+    - **defaults.js** - Default values for interface customization.
 
 ### CloudFront:
 - Create a CloudFront distribution to provide HTTPS for S3 bucket
-- *Origin Path* has to bet set to: */static*
+- **Origin Path** has to bet set to: **/static**
 
 ### Configuration:
-- *config/*
-  - *config_example.json* will need to be copied to *config.json*
-  - Update *config.json*:
-    - *expup* - Timeout for upload parts in seconds, defaults to 24h
-    - *expdn* - Timeout for download URL, defaults to 7 days (Maximum)
+- **config/**
+  - **config_example.json** will need to be copied to **config.json**
+  - Update **config.json**:
+    - **expup** - Timeout for upload parts in seconds, defaults to 24h
+    - **expdn** - Timeout for download URL, defaults to 7 days (Maximum)
