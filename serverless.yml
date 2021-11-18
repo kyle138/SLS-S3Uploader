@@ -16,6 +16,7 @@ package:
 custom:
   stage: ${opt:stage, "dev1"}
   s3config: ${file(./config/config.json):${self:custom.stage}}
+  notificationSnsTopic: "S3Uploader-notifications-${self:provider.stage}"
 
 provider:
   name: aws
@@ -31,6 +32,7 @@ provider:
     S3BUCKET: ${self:custom.s3config.bucket}
 # IAM policies
   iamRoleStatements:
+    # Grant access to create and handle S3 multipart uploads.
     - Effect: "Allow"
       Action:
         - "s3:ListBucket"
@@ -41,6 +43,12 @@ provider:
         - "s3:ListBucketMultipartUploads"
         - "s3:ListMultipartUploadParts"
       Resource: arn:aws:s3:::${self:custom.s3config.bucket}*
+    # Grant access to publish to SNS
+    - Effect: "Allow"
+      Action:
+        - "sns:Publish"
+      Resource:
+        - Ref: "NotificationsTopic"
 
 # layers
 layers:
@@ -76,6 +84,7 @@ functions:
     description: "triggered by APIG, Completes the multipart upload."
     environment:
       EXPDN: ${self:custom.s3config.expdn}
+      NOTIFICATIONS_SNS_TOPIC: {Ref: NotificationsTopic}
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}
@@ -89,15 +98,14 @@ functions:
       - {Ref: CommonModulesLambdaLayer}
     events:
       - httpApi: 'POST /post/cancelate'
-#      - s3: ${env:BUCKET}
 
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
+# CloudFormation resources
+resources:
+  Resources:
+    NotificationsTopic:
+      Type: "AWS::SNS::Topic"
+      Properties:
+        TopicName: "${self:custom.notificationSnsTopic}"
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"
