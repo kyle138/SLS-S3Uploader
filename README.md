@@ -1,9 +1,9 @@
 # SLS-S3Uploader
 Serverless stack allowing anonymous uploads to S3 bucket.
 
-##This serverless stack creates the following elements:
+## This serverless stack creates the following elements:
 
-###Lambdas:
+### Lambdas:
 - *initiator.js*
   - Called when [Submit] button is clicked to initiate upload process
   - Validates provided email domain
@@ -16,7 +16,7 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   - Returns array of presigned URLs
 - *terminator.js*
   - Completes the multipart upload
-  - Publishes notification to SNS topic 
+  - Publishes notification to SNS topic
   - Returns download presigned URL for the completed upload if successful
   - Returns "Upload failed." if not successful
 - *cancelator.js*
@@ -25,14 +25,14 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   - Checks if any parts remain and calls abort again if necessary
   - Returns "Upload already canceled." if UploadId isn't found
 
-###SNS:
+### SNS:
 - Creates SNS topic S3Uploader-notifications-{stage} to send upload notifications to
   - The SNS topic is automatically created but an email to send notifications to will need to be manually subscribed to the topic
   - Notifications contain the email address of the uploader, file name, and presigned URL to download the file
 
-##The following elements need to be created manually
+## The following elements need to be created manually
 
-###S3:
+### S3:
 - One bucket to host both the upload form and the uploaded files
   - *static/* - FrontEnd files
   - *ul/* - Directory files are uploaded to
@@ -48,7 +48,7 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   - Name the bucket the same as domain it will host
   - Create a lifecycle rule to periodically clean up the ul/ folder
 
-###FrontEnd:
+### FrontEnd:
 - The *static/* folder will need to be uploaded to the S3 bucket to host the front end form
 - *static/*
   - *index.html* - The upload form
@@ -57,11 +57,11 @@ Serverless stack allowing anonymous uploads to S3 bucket.
     - *mimetypes.js* - List of accepted file types.
     - *defaults.js* - Default values for interface customization.
 
-###CloudFront:
+### CloudFront:
 - Create a CloudFront distribution to provide HTTPS for S3 bucket
 - *Origin Path* has to bet set to: */static*
 
-###Configuration:
+### Configuration:
 - *config/*
   - *config_example.json* will need to be copied to *config.json*
   - Update *config.json*:
