@@ -19,7 +19,13 @@
     </div>
     <form class="form-horizontal" id="uploadForm" novalidate>
       <div class="form-group row form-row" id="row-email">
-        <label class="col-form-label col-sm-3" for="email">Enter a valid email address</label>
+        <div class="col-sm-3">
+          <span class="fas fa-info-circle text-primary" id="emailinfo"
+          data-toggle="tooltip"
+          title="We ask for your email address in order to contact you regarding any inquiries about your upload."
+          ></span>&nbsp;
+          <label class="col-form-label" for="email">Enter a valid email address</label>
+        </div>
         <div class="col-sm-9">
           <div class="input-group">
             <input type="email" class="form-control" id="email" placeholder="Email Address">
