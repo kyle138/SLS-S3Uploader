@@ -105,5 +105,6 @@ dist
 
 # Config files
 config/config.json
+static/js/defaults-*
 sample_post*.json
 test*
