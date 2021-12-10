@@ -4,7 +4,7 @@ Override the values below to customize the appearance of the upload form.
 
 // Display Defaults object
 const defaults = {
-  "title": "S3 Uploader",
+  "title": "Hart Energy - Client File Uploader",
   "subtitle": "Client File Uploader",
   "logosrc": 'img/logoHE.png',
   "logoalt": 'upload.HartEnergy.com',
