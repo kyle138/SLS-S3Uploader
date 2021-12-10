@@ -1,8 +1,7 @@
 'use strict';
 
 // Initialize some constants
-const APIG="https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post",
-      minPartSize = 5 * 1024 * 1024, // 5MB
+const minPartSize = 5 * 1024 * 1024, // 5MB
       maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
       maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
@@ -264,7 +263,7 @@ function thatsProgress(fidx, pcnt) {
 function initiator() {
   console.log("Initiator"); // DEBUG:
   // Settings for to fetch
-  let url = APIG+'/initiate';
+  let url = defaults.apig+'/initiate';
   let initData = {
     "email": eml.email,
     "industry": $("#industryElem").val()
@@ -412,7 +411,7 @@ function handleMultis() {
 // part.partsend
 async function getPresignedUrl(part) {
   console.log('getPresignedUrl: ',part);  // DEBUG:
-  let url = APIG+'/presign';
+  let url = defaults.apig+'/presign';
   return await fetch(url, {
     method: 'POST',
     body: JSON.stringify(part)
@@ -531,7 +530,7 @@ function putParts(file) {
 // MultiObj containing {String} Key, {String} UploadId, and {Array} ETags
 async function terminator(obj) {
   console.log('terminator:obj ',obj);
-  let url = APIG+'/terminate';
+  let url = defaults.apig+'/terminate';
   return await fetch(url, {
     method: 'POST',
     body: JSON.stringify(
@@ -561,7 +560,7 @@ async function terminator(obj) {
 // Aborts all MultipartUploads in progress
 async function cancelator() {
   console.log('cancelator');  // DEBUG:
-  let url = APIG+'/cancelate';
+  let url = defaults.apig+'/cancelate';
   // Different steps are required to cancel
   switch (cancelLvl) {
     case 0:
