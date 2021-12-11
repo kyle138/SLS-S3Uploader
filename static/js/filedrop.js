@@ -656,6 +656,7 @@ function success() {
     s = (files.length > 1) ? 's' : '';
     $("#successListLbl").html(`You can download the file${s} using the provided link${s}.`);
     $("#qsaAreaLbl").html(`Alternatively, you can copy the link${s} to your clipboard.`);
+    $(".resetbtn").removeAttr('style').removeClass('disabled');
     $("#success").fadeIn('fast');
   })  // End Promise.all.then.then
   .catch((err) => {
@@ -734,6 +735,7 @@ function validateEml(mxpass=true) {
     eml.valid = true;
     checkStatus();
     $("#alertMsg").html("").removeClass("alert alert-danger");
+    $("#emailchk").removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>').css("pointer-events: none");
     $("#row-files").fadeIn();
   }
 } // End validateEml
