@@ -8,10 +8,9 @@ package:
   patterns:
     - '!README.md'
     - '!LICENSE'
-    - '!config/config_example.json'
+    - '!config*'
     - '!static/**'
-#    - include-me.js
-#    - include-me-dir/**
+    - '!sample_post.json'
 
 custom:
   stage: ${opt:stage, "dev1"}
@@ -85,6 +84,8 @@ functions:
     environment:
       EXPDN: ${self:custom.s3config.expdn}
       NOTIFICATIONS_SNS_TOPIC: {Ref: NotificationsTopic}
+      KEYPAIRID: ${self:custom.s3config.keypairid}
+      PRIVATEKEY: ${self:custom.s3config.privatekey}
     timeout: 28
     layers:
       - {Ref: CommonModulesLambdaLayer}

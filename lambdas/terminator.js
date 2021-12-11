@@ -133,6 +133,24 @@ module.exports.handler = async (event, context) => {
     return await createResponseObject("400","Internal error. Please contact admin.");
   }
 
+  // Check if NOTIFICATIONS_SNS_TOPIC is set as an environment variable. (REQUIRED)
+  if (!process.env.NOTIFICATIONS_SNS_TOPIC) {
+    console.error("process.env.NOTIFICATIONS_SNS_TOPIC missing"); // DEBUG:
+    return await createResponseObject("400","Internal error. Please contact admin.");
+  }
+
+  // Check if KEYPAIRID is set as an environment variable. (REQUIRED)
+  if (!process.env.KEYPAIRID) {
+    console.error("process.env.KEYPAIRID missing"); // DEBUG:
+    return await createResponseObject("400","Internal error. Please contact admin.");
+  }
+
+  // Check if PRIVATEKEY is set as an environment variable. (REQUIRED)
+  if (!process.env.PRIVATEKEY) {
+    console.error("process.env.PRIVATEKEY missing"); // DEBUG:
+    return await createResponseObject("400","Internal error. Please contact admin.");
+  }
+
   // Check if EXPDN has been set as an environment variable.
   const expdn = process.env.hasOwnProperty('EXPDN') ? Number(process.env.EXPDN) : 7200;
 
@@ -156,18 +174,23 @@ module.exports.handler = async (event, context) => {
   })  // Multipart Upload completed
   .then(async (termResp) => {
     console.log('completeMultipartUpload response:'+JSON.stringify(termResp,null,2));  // DEBUG:
-    let qsa = await S3.getSignedUrlPromise(
-      'getObject',
-      {
-        "Bucket": process.env.S3BUCKET,
-        "Key": postObj.key,
-        "Expires": expdn
-      }
-    );
+    // Generate signed CloudFront URL for object
+    const CFS = new AWS.CloudFront.Signer(process.env.KEYPAIRID, process.env.PRIVATEKEY);
+    let options = {
+      url: `https://${process.env.S3BUCKET}/${postObj.key}`,
+      expires: new Date().getTime() + expdn
+    };
+    console.log('CFS options: ',JSON.stringify(options,null,2));  // DEBUG:
+    let qsa = CFS.getSignedUrl(options);
+    console.log(`qsa: ${qsa}`); // DEBUG:
+
+    // Send notification to upload recipients
     await sendNotification({
       'key': postObj.key,
       'QSA': qsa
     });
+
+    // Return QSA code to front end 
     return await createResponseObject("200",qsa);
   })  // End Promise.all.then.then
   .catch(async (err) => {
