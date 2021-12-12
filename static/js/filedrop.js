@@ -716,13 +716,13 @@ function cancel() {
 //                        function is called again with mxpass set to false
 //                        Otherwise mxpass defaults to true
 function validateEml(mxpass=true) {
-  console.log(`mxpass: ${mxpass}`); // DEBUG:
   eml.email = $("#email").val();
   if(eml.email.length == 0 || !/^.+@.+\..+$/g.test(eml.email) || !mxpass) {
     eml.valid = false;
     let emailMsg = mxpass ? "You must enter a valid email address." : "Try a different email address. The one you entered cannot be verified.";
     console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
+    $("#emailchk").removeClass('btn-success').addClass('btn-primary').html('Check').removeAttr('style');
     $("#row-files").fadeOut();
     $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
     $("#email").tooltip({
@@ -735,7 +735,7 @@ function validateEml(mxpass=true) {
     eml.valid = true;
     checkStatus();
     $("#alertMsg").html("").removeClass("alert alert-danger");
-    $("#emailchk").removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>').css("pointer-events: none");
+    $("#emailchk").removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>').attr('style', 'pointer-events: none');
     $("#row-files").fadeIn();
   }
 } // End validateEml
