@@ -23,7 +23,6 @@ $("#emailchk").click(() => {
 // Intercept enter key in the email field
 $("#email").keypress((e) => {
   if(e.which == 13) {
-    console.log("enter");
     e.preventDefault();
     if(checkStatus()) initiator();
     else validateEml();
@@ -110,14 +109,13 @@ function unhighlight(e) {
 // handleDrop
 // Catch files dropped in the droparea, filter out folders, and send to handleFiles()
 async function handleDrop(e) {
-  console.log('handleDrop:'); // DEBUG:
   let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
     if (file.type && file.size%4096 != 0) {
       res.push(file);
     }
     return res;
   },[]); // End reduce
-  console.log('noFolders[]',noFolders); // DEBUG:
+  console.log('handleDrop:noFolders[]',noFolders); // DEBUG:
   // handle the list of files from the event.
   handleFiles(noFolders);
 } // end handleDrop
@@ -126,7 +124,6 @@ async function handleDrop(e) {
 // For all files being selected via input button or droparea, send to handleFile() for processing
 // Then call checkStatus() to check if ok to submit
 function handleFiles(fls) {
-  console.log("handleFiles"); // DEBUG:
   Promise.all(
     Array.from(fls).map( async (file) => {
       if(file) {
@@ -201,15 +198,14 @@ function handleFile(file) {
 // checkStatus
 // Enables or disables the [Submit] button as the email and file fields are filled out
 function checkStatus() {
-  console.log("checkStatus"); // DEBUG:
   let noNulls = trimNulls();
   if (eml.valid && noNulls.length > 0) {
-    console.log("enable");  // DEBUG:
+    console.log("checkStatus: enable");  // DEBUG:
     $("#submitbtnwrpr").tooltip('disable');
     $("#submitbtn").removeAttr('style').removeClass('disabled');
     return true;
   } else {
-    console.log("disable"); // DEBUG:
+    console.log("checkStatus: disable"); // DEBUG:
     $("#submitbtnwrpr").tooltip('enable');
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
@@ -261,7 +257,6 @@ function thatsProgress(fidx, pcnt) {
 // Initiate the upload process for each file in files[];
 // Set Key and UploadId values for file, update progressbar to 5%
 function initiator() {
-  console.log("Initiator"); // DEBUG:
   // Settings for to fetch
   let url = defaults.apig+'/initiate';
   let initData = {
@@ -410,7 +405,6 @@ function handleMultis() {
 // part.partsbegin
 // part.partsend
 async function getPresignedUrl(part) {
-  console.log('getPresignedUrl: ',part);  // DEBUG:
   let url = defaults.apig+'/presign';
   return await fetch(url, {
     method: 'POST',
@@ -427,7 +421,6 @@ async function getPresignedUrl(part) {
     }
   })  // End fetch.then
   .then((data) => {
-    console.log('getPresignedUrl:fetch.then.then data', data);  // DEBUG:
     return data;
   })  // End fetch.then.then
   .catch((err) => {
@@ -529,7 +522,6 @@ function putParts(file) {
 // @params - object
 // MultiObj containing {String} Key, {String} UploadId, and {Array} ETags
 async function terminator(obj) {
-  console.log('terminator:obj ',obj);
   let url = defaults.apig+'/terminate';
   return await fetch(url, {
     method: 'POST',
@@ -618,8 +610,6 @@ async function cancelator() {
 // Displays success message and QSAs for uploaded files
 // To be called after all uploads have completed and we have QSA for each
 function success() {
-  console.log("success::"); // DEBUG:
-
   Promise.all(
     files.map( async (file) => {
       return await succ(file);
