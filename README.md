@@ -59,7 +59,16 @@ Serverless stack allowing anonymous uploads to S3 bucket.
 
 ### CloudFront:
 - Create a CloudFront distribution to provide HTTPS for S3 bucket
-- **Origin Path** has to bet set to: **/static**
+- **Origin Paths**
+  - Default origin, custom type, S3 website as Origin domain and Origin path set to **/static**
+  - UL origin, S3 type, S3 Bucket Access **Yes use OAI**
+    - Create CloudFront Public Key and Key Group. Record the Public Key ID for config.json:
+      https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html
+  - Create new **Behavior** with Path Pattern **/ul/*** and using the Origin created in the previous step
+    - Restrict viewer access **Yes**
+    - Trusted authorization type **Trusted key groups (recommended)**
+    - Add the key group created in the previous step
+
 
 ### Configuration:
 - **config/**
