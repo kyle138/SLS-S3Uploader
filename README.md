@@ -56,6 +56,8 @@ Serverless stack allowing anonymous uploads to S3 bucket.
     - **filedrop.js** - Handles all aspects of the file upload process.
     - **mimetypes.js** - List of accepted file types.
     - **defaults.js** - Default values for interface customization.
+  - **css/style.css** - Style sheet
+  - **img/logoH.png** - Jumbotron logo 
 
 ### CloudFront:
 - Create a CloudFront distribution to provide HTTPS for S3 bucket
