@@ -1,8 +1,7 @@
 'use strict';
 
 // Initialize some constants
-const APIG="https://asgtibnd68.execute-api.us-east-1.amazonaws.com/post",
-      minPartSize = 5 * 1024 * 1024, // 5MB
+const minPartSize = 5 * 1024 * 1024, // 5MB
       maxPartSize = 5 * 1024 * 1024 * 1024, // 5GB
       maxFileSize = 5 * 1024 * 1024 * 1024 * 1024, // 5TB
       maxParts = 10000; // AWS doesn't allow more than 10,000 parts
@@ -24,7 +23,6 @@ $("#emailchk").click(() => {
 // Intercept enter key in the email field
 $("#email").keypress((e) => {
   if(e.which == 13) {
-    console.log("enter");
     e.preventDefault();
     if(checkStatus()) initiator();
     else validateEml();
@@ -111,14 +109,13 @@ function unhighlight(e) {
 // handleDrop
 // Catch files dropped in the droparea, filter out folders, and send to handleFiles()
 async function handleDrop(e) {
-  console.log('handleDrop:'); // DEBUG:
   let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
     if (file.type && file.size%4096 != 0) {
       res.push(file);
     }
     return res;
   },[]); // End reduce
-  console.log('noFolders[]',noFolders); // DEBUG:
+  console.log('handleDrop:noFolders[]',noFolders); // DEBUG:
   // handle the list of files from the event.
   handleFiles(noFolders);
 } // end handleDrop
@@ -127,7 +124,6 @@ async function handleDrop(e) {
 // For all files being selected via input button or droparea, send to handleFile() for processing
 // Then call checkStatus() to check if ok to submit
 function handleFiles(fls) {
-  console.log("handleFiles"); // DEBUG:
   Promise.all(
     Array.from(fls).map( async (file) => {
       if(file) {
@@ -202,15 +198,14 @@ function handleFile(file) {
 // checkStatus
 // Enables or disables the [Submit] button as the email and file fields are filled out
 function checkStatus() {
-  console.log("checkStatus"); // DEBUG:
   let noNulls = trimNulls();
   if (eml.valid && noNulls.length > 0) {
-    console.log("enable");  // DEBUG:
+    console.log("checkStatus: enable");  // DEBUG:
     $("#submitbtnwrpr").tooltip('disable');
     $("#submitbtn").removeAttr('style').removeClass('disabled');
     return true;
   } else {
-    console.log("disable"); // DEBUG:
+    console.log("checkStatus: disable"); // DEBUG:
     $("#submitbtnwrpr").tooltip('enable');
     $("#submitbtn").attr('style', 'pointer-events: none').addClass('disabled');
     return false;
@@ -262,9 +257,8 @@ function thatsProgress(fidx, pcnt) {
 // Initiate the upload process for each file in files[];
 // Set Key and UploadId values for file, update progressbar to 5%
 function initiator() {
-  console.log("Initiator"); // DEBUG:
   // Settings for to fetch
-  let url = APIG+'/initiate';
+  let url = defaults.apig+'/initiate';
   let initData = {
     "email": eml.email,
     "industry": $("#industryElem").val()
@@ -411,8 +405,7 @@ function handleMultis() {
 // part.partsbegin
 // part.partsend
 async function getPresignedUrl(part) {
-  console.log('getPresignedUrl: ',part);  // DEBUG:
-  let url = APIG+'/presign';
+  let url = defaults.apig+'/presign';
   return await fetch(url, {
     method: 'POST',
     body: JSON.stringify(part)
@@ -428,7 +421,6 @@ async function getPresignedUrl(part) {
     }
   })  // End fetch.then
   .then((data) => {
-    console.log('getPresignedUrl:fetch.then.then data', data);  // DEBUG:
     return data;
   })  // End fetch.then.then
   .catch((err) => {
@@ -530,8 +522,7 @@ function putParts(file) {
 // @params - object
 // MultiObj containing {String} Key, {String} UploadId, and {Array} ETags
 async function terminator(obj) {
-  console.log('terminator:obj ',obj);
-  let url = APIG+'/terminate';
+  let url = defaults.apig+'/terminate';
   return await fetch(url, {
     method: 'POST',
     body: JSON.stringify(
@@ -561,7 +552,7 @@ async function terminator(obj) {
 // Aborts all MultipartUploads in progress
 async function cancelator() {
   console.log('cancelator');  // DEBUG:
-  let url = APIG+'/cancelate';
+  let url = defaults.apig+'/cancelate';
   // Different steps are required to cancel
   switch (cancelLvl) {
     case 0:
@@ -619,8 +610,6 @@ async function cancelator() {
 // Displays success message and QSAs for uploaded files
 // To be called after all uploads have completed and we have QSA for each
 function success() {
-  console.log("success::"); // DEBUG:
-
   Promise.all(
     files.map( async (file) => {
       return await succ(file);
@@ -657,6 +646,7 @@ function success() {
     s = (files.length > 1) ? 's' : '';
     $("#successListLbl").html(`You can download the file${s} using the provided link${s}.`);
     $("#qsaAreaLbl").html(`Alternatively, you can copy the link${s} to your clipboard.`);
+    $(".resetbtn").removeAttr('style').removeClass('disabled');
     $("#success").fadeIn('fast');
   })  // End Promise.all.then.then
   .catch((err) => {
@@ -716,13 +706,13 @@ function cancel() {
 //                        function is called again with mxpass set to false
 //                        Otherwise mxpass defaults to true
 function validateEml(mxpass=true) {
-  console.log(`mxpass: ${mxpass}`); // DEBUG:
   eml.email = $("#email").val();
   if(eml.email.length == 0 || !/^.+@.+\..+$/g.test(eml.email) || !mxpass) {
     eml.valid = false;
     let emailMsg = mxpass ? "You must enter a valid email address." : "Try a different email address. The one you entered cannot be verified.";
     console.log(`Invalid email: `+JSON.stringify(eml,null,2)); // DEBUG:
     checkStatus();
+    $("#emailchk").removeClass('btn-success').addClass('btn-primary').html('Check').removeAttr('style');
     $("#row-files").fadeOut();
     $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
     $("#email").tooltip({
@@ -735,6 +725,7 @@ function validateEml(mxpass=true) {
     eml.valid = true;
     checkStatus();
     $("#alertMsg").html("").removeClass("alert alert-danger");
+    $("#emailchk").removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>').attr('style', 'pointer-events: none');
     $("#row-files").fadeIn();
   }
 } // End validateEml

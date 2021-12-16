@@ -4,12 +4,13 @@ Override the values below to customize the appearance of the upload form.
 
 // Display Defaults object
 const defaults = {
-  "title": "S3 Uploader",
-  "subtitle": "Anonymous S3 Uploader",
-  "logosrc": 'img/logoH.png',
-  "logoalt": 'upload.KyleMunz.com',
+  "title": "Hart Energy - Client File Uploader",
+  "subtitle": "Client File Uploader",
+  "logosrc": 'img/logoHE.png',
+  "logoalt": 'upload.HartEnergy.com',
   "bgcolor": null,
-  "color": '#c7c7c7'
+  "color": '#c7c7c7',
+  "apig": 'https://asgtibnd68.execute-api.us-east-1.amazonaws.com/post'
 };
 
 if(defaults.title !== null) {
