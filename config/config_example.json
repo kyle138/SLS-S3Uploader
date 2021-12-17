@@ -2,11 +2,15 @@
   "dev1": {
     "bucket": "dev-upload.yourdomain.com",
     "expup": 86400,
-    "expdn": 604800
+    "expdn": 604800,
+    "keypairid": "KeyPairID",
+    "privatekey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEabcdefghijklmnopqrstuvwxyz1234567890\nthequickbrownfoxjumpsoverthelazyfox\n\n-----END RSA PRIVATE KEY-----"
   },
   "v1": {
     "bucket": "upload.yourdomain.com",
     "expup": 86400,
-    "expdn": 604800
+    "expdn": 604800,
+    "keypairid": "KeyPairID",
+    "privatekey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEabcdefghijklmnopqrstuvwxyz1234567890\nthequickbrownfoxjumpsoverthelazyfox\n\n-----END RSA PRIVATE KEY-----"
   }
 }

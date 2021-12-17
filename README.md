@@ -55,7 +55,9 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   - **js/**
     - **filedrop.js** - Handles all aspects of the file upload process.
     - **mimetypes.js** - List of accepted file types.
-    - **defaults.js** - Default values for interface customization.
+    - **defaults.js** - Default values for interface customization. API Gateway value retrieved from Serverless Deploy will need to be assigned to the "apig" value.
+  - **css/style.css** - Style sheet
+  - **img/logoH.png** - Jumbotron logo
 
 ### CloudFront:
 - Create a CloudFront distribution to provide HTTPS for S3 bucket
@@ -76,3 +78,6 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   - Update **config.json**:
     - **expup** - Timeout for upload parts in seconds, defaults to 24h
     - **expdn** - Timeout for download URL, defaults to 7 days (Maximum)
+    - **keypairid** - Keypair ID created during CloudFront configuration
+    - **privatekey** - Private Key associated with the Keypair ID stored on a single line with carriage returns and linebreaks replaced with '\n'
+- **
