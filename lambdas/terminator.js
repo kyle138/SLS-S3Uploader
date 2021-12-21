@@ -178,7 +178,7 @@ module.exports.handler = async (event, context) => {
     const CFS = new AWS.CloudFront.Signer(process.env.KEYPAIRID, process.env.PRIVATEKEY);
     let options = {
       url: `https://${process.env.S3BUCKET}/${postObj.key}`,
-      expires: new Date().getTime() + expdn
+      expires: Math.floor(Date.now() / 1000) + expdn
     };
     console.log('CFS options: ',JSON.stringify(options,null,2));  // DEBUG:
     let qsa = CFS.getSignedUrl(options);
@@ -190,7 +190,13 @@ module.exports.handler = async (event, context) => {
       'QSA': qsa
     });
 
-    // Return QSA code to front end 
+    // Create another CFS with only a 10 minute download time to return to form.
+    // This is to restrict the form's usefulness for hosting unwanted content.
+    options.expires = Math.floor(Date.now() / 1000) + 600;
+    qsa = CFS.getSignedUrl(options);
+    console.log(`2nd qsa: ${qsa}`); // DEBUG:
+
+    // Return QSA code to front end
     return await createResponseObject("200",qsa);
   })  // End Promise.all.then.then
   .catch(async (err) => {
