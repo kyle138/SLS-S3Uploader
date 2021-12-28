@@ -103,8 +103,10 @@ dist
 # TernJS port file
 .tern-port
 
-# Config files
+# Config and test files
 config/config.json
+config/config-*
 static/js/defaults-*
+static/img/logoHE.png
 sample_post*.json
 test*
