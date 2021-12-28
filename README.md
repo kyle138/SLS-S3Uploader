@@ -55,10 +55,6 @@ Serverless stack allowing anonymous uploads to S3 bucket.
   ```
 - CORS has to be configured to include:
   ```
-  "ExposeHeaders": [
-    "ETag"
-  ]
-  ***********************
   [
     {
         "AllowedHeaders": [
@@ -77,7 +73,7 @@ Serverless stack allowing anonymous uploads to S3 bucket.
         ],
         "MaxAgeSeconds": 3600
     }
-]
+  ]
   ```
 - Further recommendations:
   - Name the bucket the same as domain it will host
