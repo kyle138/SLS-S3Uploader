@@ -107,7 +107,8 @@ resources:
       Type: "AWS::SNS::Topic"
       Properties:
         TopicName: "${self:custom.notificationSnsTopic}"
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+
+outputs:
+  SnsTopic:
+    Description: "SNS Topic for upload notifications"
+    Value: {Ref: NotificationsTopic}
