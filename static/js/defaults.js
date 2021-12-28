@@ -6,7 +6,7 @@ Override the values below to customize the appearance of the upload form.
 const defaults = {
   "title": "Hart Energy - Client File Uploader",
   "subtitle": "Client File Uploader",
-  "logosrc": 'img/logoHE.png',
+  "logosrc": '/img/logoHE.png',
   "logoalt": 'upload.HartEnergy.com',
   "bgcolor": null,
   "color": '#c7c7c7',
