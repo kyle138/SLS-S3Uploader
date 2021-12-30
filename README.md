@@ -1,5 +1,7 @@
 # SLS-S3Uploader
-Serverless stack allowing anonymous uploads to S3 bucket.
+Serverless stack allowing anonymous and secure uploads to an S3 bucket.
+This project came about as a way to retire an old FTP server allowing pseudo-anonymous uploads of files too large to email.
+A working example can be found at [upload.KyleMunz.com](https://upload.kylemunz.com/).
 
 ## This serverless stack creates the following elements:
 
@@ -30,6 +32,15 @@ Serverless stack allowing anonymous uploads to S3 bucket.
 - Creates SNS topic S3Uploader-notifications-{stage} to send upload notifications to
   - The SNS topic is automatically created but an email to send notifications to will need to be manually subscribed to the topic
   - Notifications contain the email address of the uploader, file name, and presigned URL to download the file
+
+## Deployment Instructions:
+  Before deploying be sure to install npm modules for the lambda layers, then run the serverless deploy command specifying either dev1 or v1 stage.
+  ```
+  cd layers/CommonModules/nodejs
+  npm install
+  cd ../../..
+  serverless -s dev1|v1 deploy
+  ```
 
 ## The following elements need to be created manually
 
@@ -123,5 +134,9 @@ Serverless stack allowing anonymous uploads to S3 bucket.
 - **SNS**
   - To receive notifications when an item is uploaded, be sure to subscribe an email address to your SNS topic.
 
-### Deploy:
-- ``` serverless -s dev1|v1 deploy ```
+## Credits:
+By no means did I come up with all of this by myself. I drew heavy inspiration (and some code) from the links below:
+- [AWS's documentation on Uploading and copying objects using multipart upload](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html)
+- [Altostra has an excellent walk-through combining S3 pre-signed URLs and Multipart Uploads](https://www.altostra.com/blog/multipart-uploads-with-s3-presigned-url)
+- [Joseph Zimmerman posted a great article on smashingmagazine.com building a drag-and-drop file uploader using plain JS](https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/)
+- [Saluev also has an insightful file upload dialog example using Bootstrap and jQuery](https://github.com/Saluev/bootstrap-file-dialog)
