@@ -4,7 +4,7 @@ Serverless stack allowing anonymous and secure uploads to an S3 bucket.
 ![Diagram](https://kyle138.github.io/SLS-S3Uploader/S3Uploader.png)
 
 ## About:
-This project came about as a way to retire an old FTP server allowing pseudo-anonymous uploads of files too large to email. A working example can be found at [upload.KyleMunz.com](https://upload.kylemunz.com/).
+This project came about as a way to retire an old FTP server allowing pseudo-anonymous uploads of files too large to email. Read more at [https://kyle138.github.io/SLS-S3Uploader/](https://kyle138.github.io/SLS-S3Uploader/) or see a working example at [upload.KyleMunz.com](https://upload.kylemunz.com/).
 
 ## The serverless stack creates the following elements:
 
