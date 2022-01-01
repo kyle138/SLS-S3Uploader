@@ -1,5 +1,5 @@
 # SLS-S3Uploader
-Serverless stack allowing anonymous and secure uploads to an S3 bucket. This project came about as a way to retire an old FTP server allowing pseudo-anonymous uploads of files too large to email. 
+Serverless stack allowing anonymous and secure uploads to an S3 bucket. This project came about as a way to retire an old FTP server allowing pseudo-anonymous uploads of files too large to email.
 
 A working example can be found at [upload.KyleMunz.com](https://upload.kylemunz.com/).
 
@@ -107,7 +107,7 @@ A working example can be found at [upload.KyleMunz.com](https://upload.kylemunz.
 - **Create Origin Paths**
   - Default origin:
     - Custom type
-    - S3 website engpoint as Origin domain
+    - S3 website endpoint as Origin domain
     - Origin path set to **/static**
   - UL origin:
     - S3 type
