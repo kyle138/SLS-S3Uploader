@@ -1,7 +1,7 @@
 ![Diagram](https://kyle138.github.io/SLS-S3Uploader/S3Uploader.png)
 
 ## About
-This project came about as a way to retire an old FTP server. Sometimes external clients need to send you files that are too large to attach to an email. In the past the answer was to set up an FTP server for them to upload the files too. Since then FTP has fallen out of fashion and better solutions such as Dropbox and Google Drive now exist. Unfortunately some clients just can't use Dropbox or Drive and this was the simplest solution I could come up with. This is a Serverless solution consisting of a handful of lambdas and a single S3 bucket hosting a single-page app. 
+This project came about as a way to retire an old FTP server. Sometimes external clients need to send you files that are too large to attach to an email. In the past the answer was to set up an FTP server for them to upload the files to. Since then FTP has fallen out of fashion and better solutions such as Dropbox and Google Drive now exist. Unfortunately some clients just can't use Dropbox or Drive and this was the simplest solution I could come up with. This is a Serverless solution consisting of a handful of lambdas and a single S3 bucket hosting a single-page app. 
 
 ## How It Works
 1. The client-side frontend consists of a simple form that the client uses to select the files they want to upload. 
