@@ -10,4 +10,4 @@ This project came about as a way to retire an old FTP server. Sometimes external
 6. *Optionally, if the [Cancel] button is clicked the front end sends the UploadId to the cancelator lambda which attempts to abort the multipart upload.
 7. Finally, the frontend displays the success, failed, or canceled screen. 
 
-A working example can be found at [upload.KyleMunz.com](https://upload.kylemunz.com/).
+A working example can be found at [upload.KyleMunz.com](https://upload.kylemunz.com/). The sourcecode and setup instructions are availabe at [github.com/kyle138/SLS-S3Uploader](https://github.com/kyle138/SLS-S3Uploader).
