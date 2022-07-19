@@ -155,7 +155,7 @@ function handleFile(file) {
     ).fadeIn('fast');
   } else if (mimetypes.indexOf(file.type) == -1) {
     $("#alertMsg").addClass("alert alert-warning").append(
-      `<div class='row'>Files of type '${file.type}' are not accepted.</div>`
+      `<div class='row'>Files of type '${file.type}' are not accepted. The file ${file.name} has been removed.</div>`
     ).fadeIn('fast');
   } else {
     // Get number of parts for multipart upload
