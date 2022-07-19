@@ -153,7 +153,7 @@ function handleFile(file) {
     $("#alertMsg").addClass("alert alert-warning").append(
       `<div class='row'>Files over 5TB in size are not accepted.</div>`
     ).fadeIn('fast');
-  } else if (mimetypes.indexOf(file.type) == -1) {
+  } else if (!mimetypes.validate(file.type)) {
     $("#alertMsg").addClass("alert alert-warning").append(
       `<div class='row'>Files of type '${file.type}' are not accepted. The file ${file.name} has been removed.</div>`
     ).fadeIn('fast');

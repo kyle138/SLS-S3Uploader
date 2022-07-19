@@ -4,71 +4,15 @@ const AWS = require('aws-sdk');
 const s3Filename = require('s3-filename');
 const legit = require('legit');
 const createResponseObject = require('create-response-object');
+const mimetypes = require('config/mimetypes.js'); // Array of allowed MIME types
 
 // Instantialize S3
 const S3 = new AWS.S3({
   apiVersion: '2006-03-01',
   signatureVersion: 'v4'
 });
-
 // Is 'Instantialize' a real word?
 
-// Array of allowed MIME types
-const mimetypes = [
-  'application/epub+zip',
-  'application/gzip',
-  'application/json',
-  'application/msword',
-  'application/pdf',
-  'application/rtf',
-  'application/vnd.oasis.opendocument.presentation',
-  'application/vnd.oasis.opendocument.spreadsheet',
-  'application/vnd.oasis.opendocument.text',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.ms-powerpoint',
-  'application/vnd.rar',
-  'application/vnd.visio',
-  'application/x-7z-compressed',
-  'application/x-bzip',
-  'application/x-bzip2',
-  'application/x-tar',
-  'application/zip',
-  'audio/3gpp',
-  'audio/3gpp2',
-  'audio/aac',
-  'audio/mpeg',
-  'audio/ogg',
-  'audio/wav',
-  'audio/webm',
-  'font/otf',
-  'font/ttf',
-  'font/woff',
-  'font/woff2',
-  'image/bmp',
-  'image/gif',
-  'image/jpeg',
-  'image/png',
-  'image/svg+xml',
-  'image/tiff',
-  'image/vnd.adobe.photoshop',
-  'image/vnd.microsoft.icon',
-  'image/webp',
-  'image/x-eps',
-  'image/x-xcf',
-  'text/css',
-  'text/csv',
-  'text/plain',
-  'video/3gpp',
-  'video/3gpp2',
-  'video/mp4',
-  'video/mpeg',
-  'video/ogg',
-  'video/webm',
-  'video/x-msvideo',
-];
 
 // validateFilename()
 // Checks if filename is a string of some length
@@ -88,7 +32,7 @@ function validateFilename(name) {
 // Checks if filetype is an accepted MIME type
 function validateFiletype(type) {
   return new Promise((res, rej) => {
-    if (mimetypes.indexOf(type) == -1) {
+    if (!mimetypes.validate(type)) {
       return rej( new Error(`Filetype invalid. ${type} is not an accepted MIME type.`));
     } else {
       return res();
