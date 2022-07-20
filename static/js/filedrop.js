@@ -145,54 +145,69 @@ function handleFiles(fls) {
 // Add file progress row to filesList div
 // @params {file} file - The file selected for upload
 function handleFile(file) {
-  console.log("handleFile:",file);  // DEBUG:
+  return new Promise(async (res) => {
+    console.log("handleFile:",file);  // DEBUG:
 
-  // Check if file is over AWS maximum of 5TB
-  // and if file is one of the accepted file types.
-  if (file.size > maxFileSize) {
-    $("#alertMsg").addClass("alert alert-warning").append(
-      `<div class='row'>Files over 5TB in size are not accepted.</div>`
-    ).fadeIn('fast');
-  } else if (!mimetypes.validate(file.type)) {
-    $("#alertMsg").addClass("alert alert-warning").append(
-      `<div class='row'>Files of type '${file.type}' are not accepted. The file ${file.name} has been removed.</div>`
-    ).fadeIn('fast');
-  } else {
-    // Get number of parts for multipart upload
-    let parts = reckonParts(file.size);
-    // Get next Array index
-    let fidx = files.length;
-    files.push({
-      "fidx": fidx,
-      "multiObj": { "parts": parts },
-      "fileObj": file
-    });
-    let fileprog = $(`
-      <div class="container-fluid row filerow" id="fidx${fidx}">
+    // Check if file is over AWS maximum of 5TB
+    // and if file is one of the accepted file types.
+    if (file.size > maxFileSize) {
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Files over 5TB in size are not accepted. The file '${file.name}' has been removed.</div>`
+      ).fadeIn('fast');
+      return res();
+    }
+
+    // If the file.type is blank, check if it's an indesign file and set file.type to 'application/x-indesign'
+    if (file.type === '') {
+      if(await isIndesign(file)) {
+        file.type = 'application/x-indesign';
+      }
+      // file.type = (await isIndesign(file)) ? 'application/x-indesign' : '';
+      console.log(`handleFile:isIndesign:type:: ${file.type}`); // DEBUG:
+    }
+
+    if (!mimetypes.validate(file.type)) {
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Files of type '${file.type}' are not accepted. The file '${file.name}' has been removed.</div>`
+      ).fadeIn('fast');
+      return res();
+    } else {
+      // Get number of parts for multipart upload
+      let parts = reckonParts(file.size);
+      // Get next Array index
+      let fidx = files.length;
+      files.push({
+        "fidx": fidx,
+        "multiObj": { "parts": parts },
+        "fileObj": file
+      });
+      let fileprog = $(`
+        <div class="container-fluid row filerow" id="fidx${fidx}">
         <div class="col-sm-4 text-truncate file">
-          <span class="fas fa-times-circle s3u-remove" data-toggle="tooltip" title="Remove this file from upload queue."></span>&nbsp;
-          <span class="fas fa-file"></span>&nbsp;
-          <span>${file.name}</span>&nbsp;
+        <span class="fas fa-times-circle s3u-remove" data-toggle="tooltip" title="Remove this file from upload queue."></span>&nbsp;
+        <span class="fas fa-file"></span>&nbsp;
+        <span>${file.name}</span>&nbsp;
         </div>
         <div class="col-sm-8 s3u-progress">
-          <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'>
-              <span class="sr-only">0%</span>
-            </div>
-          </div>
+        <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'>
+        <span class="sr-only">0%</span>
         </div>
-      </div>
-    `);
+        </div>
+        </div>
+        </div>
+      `);
 
-    $(".s3u-remove",fileprog).on("click", () => {
-      console.log(`removeFile: ${fidx}`);  // DEBUG:
-      files[fidx] = null;
-      $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
-      checkStatus();
-    });
+      $(".s3u-remove",fileprog).on("click", () => {
+        console.log(`removeFile: ${fidx}`);  // DEBUG:
+        files[fidx] = null;
+        $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
+        checkStatus();
+      });
 
-    $("#filesList").append(fileprog);
-  }
+      $("#filesList").append(fileprog);
+    } // End else !mimetype
+  }); // End Promise
 } // End handleFile
 
 // checkStatus
@@ -757,3 +772,31 @@ function reckonParts(filesize) {
             : 10000;
   return parts;
 } // End reckonParts
+
+// isIndesign
+// Indesign files (.indd, .indt, .indl) for some reason have no 'type'
+// Attempts to read first 16 bytes of specified file to compare 'Magic Numbers'
+// https://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_numbers_in_files
+function isIndesign(file) {
+  return new Promise((res) => {
+    // File has to be atleast 16 bytes to test
+    if(file.size < 16) {
+      return res(false);
+    } else {
+      let reader = new FileReader();
+
+      reader.onloadend = (evt) => {
+        if(evt.target.readyState === FileReader.DONE) {
+          let magic = [...new Uint8Array(evt.target.result)]
+          .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
+          .join('');
+          console.log(`magic: ${magic}`); // DEBUG:
+          return res(magic === '0606EDF5D81D46E5BD31EFE7FE74B71D');
+        }
+      }
+
+      // Blob gonna byte off the first 16 of that file
+      let blob = reader.readAsArrayBuffer(file.slice(0,16));
+    }// End if/else
+  }); // End Promise
+} // End isIndesign
