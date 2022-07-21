@@ -109,12 +109,29 @@ function unhighlight(e) {
 // handleDrop
 // Catch files dropped in the droparea, filter out folders, and send to handleFiles()
 async function handleDrop(e) {
-  let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
-    if (file.type && file.size%4096 != 0) {
-      res.push(file);
+  let noFolders = [];
+  for(var i=0; i<e.dataTransfer.items.length; i++) {
+    console.log(e.dataTransfer.items[i].webkitGetAsEntry());  // DEBUG:
+    if(e.dataTransfer.items[i].webkitGetAsEntry() == null) {
+      // This usually means the file was dropped from a foreign filesystem
+      // eg: an sftp mounted fileshare, this is more of an OS issue than a browser issue
+      console.log(`dataTransfer.item.webkitGetAsEntry is null`);  // DEBUG:
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Unsupported file system. Please try again from a different location.</div>`
+      ).fadeIn('fast');
+    } else if(e.dataTransfer.items[i].webkitGetAsEntry().isDirectory) {
+      // We do not allow folder uploads at this time, this could lead to
+      // someone inadvertantly attempting to upload thousands of files at once.
+      console.log(`Folder dropped: ${e.dataTransfer.files[i].name}`); // DEBUG:
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Directory uploads are not supported. The folder '${e.dataTransfer.files[i].name}' has been removed.</div>`
+      ).fadeIn('fast');
+    } else {
+      console.log(`File detected: ${e.dataTransfer.files[i].name}`);  // DEBUG:
+      noFolders.push(e.dataTransfer.files[i]);
     }
-    return res;
-  },[]); // End reduce
+  }   // End for loop
+
   console.log('handleDrop:noFolders[]',noFolders); // DEBUG:
   // handle the list of files from the event.
   handleFiles(noFolders);
