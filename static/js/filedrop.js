@@ -109,12 +109,28 @@ function unhighlight(e) {
 // handleDrop
 // Catch files dropped in the droparea, filter out folders, and send to handleFiles()
 async function handleDrop(e) {
-  let noFolders = Array.from(e.dataTransfer.files).reduce( (res,file) => {
-    if (file.type && file.size%4096 != 0) {
-      res.push(file);
+  let noFolders = [];
+  for(var i=0; i<e.dataTransfer.items.length; i++) {
+    if(e.dataTransfer.items[i].webkitGetAsEntry() == null) {
+      // This usually means the file was dropped from a foreign filesystem
+      // eg: an sftp mounted fileshare, this is more of an OS issue than a browser issue
+      console.log(`dataTransfer.item.webkitGetAsEntry is null`);  // DEBUG:
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Unsupported file system. Please try again from a different location.</div>`
+      ).fadeIn('fast');
+    } else if(e.dataTransfer.items[i].webkitGetAsEntry().isDirectory) {
+      // We do not allow folder uploads at this time, this could lead to
+      // someone inadvertantly attempting to upload thousands of files at once.
+      console.log(`Folder dropped: ${e.dataTransfer.files[i].name}`); // DEBUG:
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Directory uploads are not supported. The folder '${e.dataTransfer.files[i].name}' has been removed.</div>`
+      ).fadeIn('fast');
+    } else {
+      // console.log(`File detected: ${e.dataTransfer.files[i].name}`);  // DEBUG:
+      noFolders.push(e.dataTransfer.files[i]);
     }
-    return res;
-  },[]); // End reduce
+  }   // End for loop
+
   console.log('handleDrop:noFolders[]',noFolders); // DEBUG:
   // handle the list of files from the event.
   handleFiles(noFolders);
@@ -145,54 +161,67 @@ function handleFiles(fls) {
 // Add file progress row to filesList div
 // @params {file} file - The file selected for upload
 function handleFile(file) {
-  console.log("handleFile:",file);  // DEBUG:
+  return new Promise(async (res) => {
+    console.log("handleFile:",file);  // DEBUG:
 
-  // Check if file is over AWS maximum of 5TB
-  // and if file is one of the accepted file types.
-  if (file.size > maxFileSize) {
-    $("#alertMsg").addClass("alert alert-warning").append(
-      `<div class='row'>Files over 5TB in size are not accepted.</div>`
-    ).fadeIn('fast');
-  } else if (mimetypes.indexOf(file.type) == -1) {
-    $("#alertMsg").addClass("alert alert-warning").append(
-      `<div class='row'>Files of type '${file.type}' are not accepted.</div>`
-    ).fadeIn('fast');
-  } else {
-    // Get number of parts for multipart upload
-    let parts = reckonParts(file.size);
-    // Get next Array index
-    let fidx = files.length;
-    files.push({
-      "fidx": fidx,
-      "multiObj": { "parts": parts },
-      "fileObj": file
-    });
-    let fileprog = $(`
-      <div class="container-fluid row filerow" id="fidx${fidx}">
+    // Check if file is over AWS maximum of 5TB
+    // and if file is one of the accepted file types.
+    if (file.size > maxFileSize) {
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Files over 5TB in size are not accepted. The file '${file.name}' has been removed.</div>`
+      ).fadeIn('fast');
+      return res();
+    }
+
+    // If the file.type is blank, check if it's an indesign file and set file.customtype to 'application/x-indesign'
+    if (file.type === '') {
+      file.customtype = (await isIndesign(file)) ? 'application/x-indesign' : null;
+      // console.log(`handleFile:isIndesign:type:: ${file.customtype}`); // DEBUG:
+    }
+
+    if (!file.customtype && !mimetypes.validate(file.type)) {
+      $("#alertMsg").addClass("alert alert-warning").append(
+        `<div class='row'>Files of type '${file.type}' are not accepted. The file '${file.name}' has been removed.</div>`
+      ).fadeIn('fast');
+      return res();
+    } else {
+      // Get number of parts for multipart upload
+      let parts = reckonParts(file.size);
+      // Get next Array index
+      let fidx = files.length;
+      files.push({
+        "fidx": fidx,
+        "multiObj": { "parts": parts },
+        "fileObj": file
+      });
+      let fileprog = $(`
+        <div class="container-fluid row filerow" id="fidx${fidx}">
         <div class="col-sm-4 text-truncate file">
-          <span class="fas fa-times-circle s3u-remove" data-toggle="tooltip" title="Remove this file from upload queue."></span>&nbsp;
-          <span class="fas fa-file"></span>&nbsp;
-          <span>${file.name}</span>&nbsp;
+        <span class="fas fa-times-circle s3u-remove" data-toggle="tooltip" title="Remove this file from upload queue."></span>&nbsp;
+        <span class="fas fa-file"></span>&nbsp;
+        <span>${file.name}</span>&nbsp;
         </div>
         <div class="col-sm-8 s3u-progress">
-          <div class="progress">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'>
-              <span class="sr-only">0%</span>
-            </div>
-          </div>
+        <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="pb${fidx}" aria-valuenow='0' aria-valuemin='0' aria-valuemax='100'>
+        <span class="sr-only">0%</span>
         </div>
-      </div>
-    `);
+        </div>
+        </div>
+        </div>
+      `);
 
-    $(".s3u-remove",fileprog).on("click", () => {
-      console.log(`removeFile: ${fidx}`);  // DEBUG:
-      files[fidx] = null;
-      $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
-      checkStatus();
-    });
+      $(".s3u-remove",fileprog).on("click", () => {
+        console.log(`removeFile: ${fidx}`);  // DEBUG:
+        files[fidx] = null;
+        $(`#fidx${fidx}`).fadeOut("slow", () => $(`#fidx${fidx}`).remove());
+        checkStatus();
+      });
 
-    $("#filesList").append(fileprog);
-  }
+      $("#filesList").append(fileprog);
+      return res();
+    } // End else !mimetype
+  }); // End Promise
 } // End handleFile
 
 // checkStatus
@@ -272,7 +301,8 @@ function initiator() {
   Promise.all(
     files.map( async (file) => {
       initData.filename = file.fileObj.name;
-      initData.filetype = file.fileObj.type;
+      // filetype might be on either fileObj.type or fileObj.customtype (see isIndesign())
+      initData.filetype = (!file.fileObj.customtype) ? file.fileObj.type : file.fileObj.customtype;
       return await fetch(url, {
         method: 'POST',
         body: JSON.stringify(initData)
@@ -757,3 +787,30 @@ function reckonParts(filesize) {
             : 10000;
   return parts;
 } // End reckonParts
+
+// isIndesign
+// Indesign files (.indd, .indt, .indl) for some reason have no 'type'
+// Attempts to read first 16 bytes of specified file to compare 'Magic Numbers'
+// https://en.wikipedia.org/wiki/Magic_number_(programming)#Magic_numbers_in_files
+function isIndesign(file) {
+  return new Promise((res) => {
+    // File has to be atleast 16 bytes to test
+    if(file.size < 16) {
+      return res(false);
+    } else {
+      let reader = new FileReader();
+
+      reader.onloadend = (evt) => {
+        if(evt.target.readyState === FileReader.DONE) {
+          let magic = [...new Uint8Array(evt.target.result)]
+          .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
+          .join('');
+          return res(magic === '0606EDF5D81D46E5BD31EFE7FE74B71D');
+        }
+      }
+
+      // Blob gonna byte off the first 16 of that file
+      let blob = reader.readAsArrayBuffer(file.slice(0,16));
+    }// End if/else
+  }); // End Promise
+} // End isIndesign

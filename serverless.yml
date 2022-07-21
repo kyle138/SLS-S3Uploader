@@ -3,12 +3,13 @@ service: s3uploader
 app: s3uploader
 #org: kyle138
 
-frameworkVersion: '2'
+frameworkVersion: '3'
 package:
   patterns:
     - '!README.md'
     - '!LICENSE'
-    - '!config*'
+    - '!config/config*'
+    - 'config/mimetypes.js'
     - '!static/**'
     - '!sample_post.json'
 

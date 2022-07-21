@@ -10,7 +10,7 @@ const defaults = {
   "logoalt": 'upload.KyleMunz.com',
   "bgcolor": null,
   "color": '#c7c7c7',
-  "apig": 'https://iug44sohqg.execute-api.us-east-1.amazonaws.com/post'
+  "apig": 'https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post'
 };
 
 if(defaults.title !== null) {
