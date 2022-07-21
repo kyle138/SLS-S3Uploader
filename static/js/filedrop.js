@@ -157,16 +157,13 @@ function handleFile(file) {
       return res();
     }
 
-    // If the file.type is blank, check if it's an indesign file and set file.type to 'application/x-indesign'
+    // If the file.type is blank, check if it's an indesign file and set file.customtype to 'application/x-indesign'
     if (file.type === '') {
-      if(await isIndesign(file)) {
-        file.type = 'application/x-indesign';
-      }
-      // file.type = (await isIndesign(file)) ? 'application/x-indesign' : '';
-      console.log(`handleFile:isIndesign:type:: ${file.type}`); // DEBUG:
+      file.customtype = (await isIndesign(file)) ? 'application/x-indesign' : null;
+      console.log(`handleFile:isIndesign:type:: ${file.customtype}`); // DEBUG:
     }
 
-    if (!mimetypes.validate(file.type)) {
+    if (!file.customtype && !mimetypes.validate(file.type)) {
       $("#alertMsg").addClass("alert alert-warning").append(
         `<div class='row'>Files of type '${file.type}' are not accepted. The file '${file.name}' has been removed.</div>`
       ).fadeIn('fast');
@@ -206,6 +203,7 @@ function handleFile(file) {
       });
 
       $("#filesList").append(fileprog);
+      return res();
     } // End else !mimetype
   }); // End Promise
 } // End handleFile
@@ -287,7 +285,8 @@ function initiator() {
   Promise.all(
     files.map( async (file) => {
       initData.filename = file.fileObj.name;
-      initData.filetype = file.fileObj.type;
+      // filetype might be on either fileObj.type or fileObj.customtype (see isIndesign())
+      initData.filetype = (!file.fileObj.customtype) ? file.fileObj.type : file.fileObj.customtype;
       return await fetch(url, {
         method: 'POST',
         body: JSON.stringify(initData)
@@ -790,7 +789,6 @@ function isIndesign(file) {
           let magic = [...new Uint8Array(evt.target.result)]
           .map(byte => byte.toString(16).padStart(2, '0').toUpperCase())
           .join('');
-          console.log(`magic: ${magic}`); // DEBUG:
           return res(magic === '0606EDF5D81D46E5BD31EFE7FE74B71D');
         }
       }
