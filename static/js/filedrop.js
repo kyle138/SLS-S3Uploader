@@ -111,7 +111,6 @@ function unhighlight(e) {
 async function handleDrop(e) {
   let noFolders = [];
   for(var i=0; i<e.dataTransfer.items.length; i++) {
-    console.log(e.dataTransfer.items[i].webkitGetAsEntry());  // DEBUG:
     if(e.dataTransfer.items[i].webkitGetAsEntry() == null) {
       // This usually means the file was dropped from a foreign filesystem
       // eg: an sftp mounted fileshare, this is more of an OS issue than a browser issue
@@ -127,7 +126,7 @@ async function handleDrop(e) {
         `<div class='row'>Directory uploads are not supported. The folder '${e.dataTransfer.files[i].name}' has been removed.</div>`
       ).fadeIn('fast');
     } else {
-      console.log(`File detected: ${e.dataTransfer.files[i].name}`);  // DEBUG:
+      // console.log(`File detected: ${e.dataTransfer.files[i].name}`);  // DEBUG:
       noFolders.push(e.dataTransfer.files[i]);
     }
   }   // End for loop
@@ -177,7 +176,7 @@ function handleFile(file) {
     // If the file.type is blank, check if it's an indesign file and set file.customtype to 'application/x-indesign'
     if (file.type === '') {
       file.customtype = (await isIndesign(file)) ? 'application/x-indesign' : null;
-      console.log(`handleFile:isIndesign:type:: ${file.customtype}`); // DEBUG:
+      // console.log(`handleFile:isIndesign:type:: ${file.customtype}`); // DEBUG:
     }
 
     if (!file.customtype && !mimetypes.validate(file.type)) {
