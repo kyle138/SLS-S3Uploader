@@ -72,4 +72,4 @@
     return (mimetypes.indexOf(filetype) !== -1);
   } // End exports.validate
 
-})(typeof exports === 'undefined'? this['mimetypes']={}: exports);
+})(typeof exports === 'undefined' ? this['mimetypes']={} : exports);
