@@ -744,6 +744,7 @@ function validateEml(mxpass=true) {
     checkStatus();
     $("#emailchk").removeClass('btn-success').addClass('btn-primary').html('Check').removeAttr('style');
     $("#row-files").fadeOut();
+    $("#row-notes").fadeOut();
     $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
     $("#email").tooltip({
       "container": "body",
@@ -757,6 +758,7 @@ function validateEml(mxpass=true) {
     $("#alertMsg").html("").removeClass("alert alert-danger");
     $("#emailchk").removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>').attr('style', 'pointer-events: none');
     $("#row-files").fadeIn();
+    $("#row-notes").fadeIn();
   }
 } // End validateEml
 
