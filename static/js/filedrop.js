@@ -553,13 +553,18 @@ function putParts(file) {
 // MultiObj containing {String} Key, {String} UploadId, and {Array} ETags
 async function terminator(obj) {
   let url = defaults.apig+'/terminate';
+
+  // Add notelElem contents (if any) to obj
+  obj.notes = $("#notesArea").val();
+
   return await fetch(url, {
     method: 'POST',
     body: JSON.stringify(
       {
         "key": obj.Key,
         "uploadid": obj.UploadId,
-        "parts": obj.ETags
+        "parts": obj.ETags,
+        "notes": obj.notes
       }
     )
   })  // End fetch
@@ -744,6 +749,7 @@ function validateEml(mxpass=true) {
     checkStatus();
     $("#emailchk").removeClass('btn-success').addClass('btn-primary').html('Check').removeAttr('style');
     $("#row-files").fadeOut();
+    $("#row-notes").fadeOut();
     $("#alertMsg").addClass("alert alert-danger").html( emailMsg ).fadeIn('fast');
     $("#email").tooltip({
       "container": "body",
@@ -757,6 +763,7 @@ function validateEml(mxpass=true) {
     $("#alertMsg").html("").removeClass("alert alert-danger");
     $("#emailchk").removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i>').attr('style', 'pointer-events: none');
     $("#row-files").fadeIn();
+    $("#row-notes").fadeIn();
   }
 } // End validateEml
 

@@ -1,5 +1,5 @@
 # SLS-S3Uploader
-Serverless stack allowing anonymous and secure uploads to an S3 bucket. 
+Serverless stack allowing anonymous and secure uploads to an S3 bucket.
 
 ![Diagram](https://kyle138.github.io/SLS-S3Uploader/S3Uploader.png)
 
@@ -143,3 +143,4 @@ By no means did I come up with all of this by myself. I drew heavy inspiration (
 - [Altostra has an excellent walk-through combining S3 pre-signed URLs and Multipart Uploads](https://www.altostra.com/blog/multipart-uploads-with-s3-presigned-url)
 - [Joseph Zimmerman posted a great article on smashingmagazine.com building a drag-and-drop file uploader using plain JS](https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/)
 - [Saluev also has an insightful file upload dialog example using Bootstrap and jQuery](https://github.com/Saluev/bootstrap-file-dialog)
+- [So many google searches went into filtering out folders from the file drop. This is seemingly the only site with a real answer.](https://developer.chrome.com/blog/drag-and-drop-a-folder-onto-chrome-now-available/)

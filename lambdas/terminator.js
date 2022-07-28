@@ -76,8 +76,10 @@ function validatePart(part) {
 // @params Object
 // params.key - Key of the S3 object recently uploaded.
 // params.QSA - QSA string file can be downloaded from.
+// params.notes - (Optional) String of notes regarding the uploaded file
 function sendNotification(params) {
   return new Promise(async (res) => {
+    console.log('sendNotification:params:: ',JSON.stringify(params,null,2));  // DEBUG:
     // Check if SNS topic is set, if not nothing to notifiy.
     if(!process.env.hasOwnProperty('NOTIFICATIONS_SNS_TOPIC') ||
         process.env.NOTIFICATIONS_SNS_TOPIC.length == 0) {
@@ -98,9 +100,12 @@ function sendNotification(params) {
     let msg = `
 A file has recently been uploaded. Please see details below:
 
-Uploader: ${params.key[1]}
-File Name: ${params.key[2]}
-Download Link: ${params.QSA}
+Uploader:: ${params.key[1]}
+File Name:: ${params.key[2]}
+Download Link:: ${params.QSA}
+
+Notes::
+${(params.notes) ? params.notes : ''}
 `;
     return SNS.publish({
       Message: msg,
@@ -184,11 +189,17 @@ module.exports.handler = async (event, context) => {
     let qsa = CFS.getSignedUrl(options);
     console.log(`qsa: ${qsa}`); // DEBUG:
 
-    // Send notification to upload recipients
-    await sendNotification({
+    // Build sendNotification params
+    let params = {
       'key': postObj.key,
       'QSA': qsa
-    });
+    };
+
+    // Check if there are any 'notes' to add to the params
+    if(postObj.notes) params.notes = postObj.notes;
+
+    // Send notification to upload recipients
+    await sendNotification(params);
 
     // Create another CFS with only a 10 minute download time to return to form.
     // This is to restrict the form's usefulness for hosting unwanted content.
