@@ -553,13 +553,18 @@ function putParts(file) {
 // MultiObj containing {String} Key, {String} UploadId, and {Array} ETags
 async function terminator(obj) {
   let url = defaults.apig+'/terminate';
+
+  // Add notelElem contents (if any) to obj
+  obj.notes = $("#notesArea").val();
+
   return await fetch(url, {
     method: 'POST',
     body: JSON.stringify(
       {
         "key": obj.Key,
         "uploadid": obj.UploadId,
-        "parts": obj.ETags
+        "parts": obj.ETags,
+        "notes": obj.notes
       }
     )
   })  // End fetch
