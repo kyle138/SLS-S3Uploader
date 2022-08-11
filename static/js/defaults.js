@@ -9,6 +9,7 @@ const defaults = {
   "logosrc": '/img/logoH.png',
   "logoalt": 'upload.KyleMunz.com',
   "bgcolor": null,
+  "notesph": null,
   "color": '#c7c7c7',
   "apig": 'https://ile7rs5fbl.execute-api.us-east-1.amazonaws.com/post'
 };
@@ -31,6 +32,10 @@ if(defaults.logoalt !== null) {
 
 if(defaults.bgcolor !== null) {
   $('.jumbotron').css('background-color',defaults.bgcolor);
+}
+
+if(defaults.notesph !== null) {
+  $('#tanotes').attr('placeholder',defaults.notesph);
 }
 
 if(defaults.color !== null) {
